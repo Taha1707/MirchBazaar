@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "838980288520",
+    "project_id": "vision-2025-40d02",
+    "storage_bucket": "vision-2025-40d02.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:838980288520:android:888c1529253a8c4a9451bd",
+        "android_client_info": {
+          "package_name": "com.mirchbazaar.project"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuA7BPiBoauJzwA1LklllPCNF8yhf4o-8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
