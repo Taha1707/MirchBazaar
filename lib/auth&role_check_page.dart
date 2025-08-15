@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:project/admin/home_admin.dart';
 import 'package:project/admin/view_product_page.dart';
 import 'package:project/user/home_user.dart';
 import 'package:project/user/product_page.dart';
@@ -53,13 +54,13 @@ class AuthRoleNavigator {
       final role = doc.data()?['role'] ?? 'user';
 
       if (returnWidget) {
-        return role == 'admin' ? const ViewProductPage() : const HomePage();
+        return role == 'admin' ? const AdminHomePage() : const HomePage();
       }
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => role == 'admin' ? const ViewProductPage() : const HomePage(),
+          builder: (_) => role == 'admin' ? const AdminHomePage() : const HomePage(),
         ),
       );
 
