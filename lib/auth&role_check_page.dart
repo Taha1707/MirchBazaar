@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project/admin/view_product_page.dart';
+import 'package:project/user/home_user.dart';
 import 'package:project/user/product_page.dart';
 import 'login_page.dart';
 
@@ -52,15 +53,16 @@ class AuthRoleNavigator {
       final role = doc.data()?['role'] ?? 'user';
 
       if (returnWidget) {
-        return role == 'admin' ? const ViewProductPage() : const UserProductPage();
+        return role == 'admin' ? const ViewProductPage() : const HomePage();
       }
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => role == 'admin' ? const ViewProductPage() : const UserProductPage(),
+          builder: (_) => role == 'admin' ? const ViewProductPage() : const HomePage(),
         ),
       );
+
       return null;
     } catch (e) {
       debugPrint("Error fetching role: $e");

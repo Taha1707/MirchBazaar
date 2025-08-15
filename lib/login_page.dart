@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:project/signup_page.dart';
+import 'package:project/user/home_user.dart';
 import './admin/view_product_page.dart';
 import '../services/authentication.dart';
 import '../services/validation.dart';
@@ -28,10 +29,13 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     final user = FirebaseAuth.instance.currentUser;
+
     if (user != null) {
       Future.delayed(Duration.zero, () {
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => ViewProductPage()));
+          context,
+          MaterialPageRoute(builder: (_) => HomePage()), // replace with your class name
+        );
       });
     }
   }
