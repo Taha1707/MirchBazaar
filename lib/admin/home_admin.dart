@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:video_player/video_player.dart';
 
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
@@ -12,19 +13,33 @@ class AdminHomePage extends StatefulWidget {
 class _AdminHomePageState extends State<AdminHomePage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  late VideoPlayerController _videoController;
 
   @override
   void initState() {
     super.initState();
+
+    // Animation Controller for menu
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
+
+    // Video Background
+    _videoController =
+    VideoPlayerController.asset("assets/images/firework.mp4")
+      ..initialize().then((_) {
+        _videoController.setLooping(true);
+        _videoController.setVolume(0);
+        _videoController.play();
+        setState(() {});
+      });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _videoController.dispose();
     super.dispose();
   }
 
@@ -54,13 +69,18 @@ class _AdminHomePageState extends State<AdminHomePage>
       ),
       body: Stack(
         children: [
-          // Background GIF (same as user homepage)
-          Image.asset(
-            "assets/images/firework.gif",
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-          ),
+          // Background Video (instead of GIF)
+          if (_videoController.value.isInitialized)
+            SizedBox.expand(
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _videoController.value.size.width,
+                  height: _videoController.value.size.height,
+                  child: VideoPlayer(_videoController),
+                ),
+              ),
+            ),
 
           // Main admin content
           SafeArea(

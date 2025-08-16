@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:video_player/video_player.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,19 +14,31 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  late VideoPlayerController _videoController;
 
   @override
   void initState() {
     super.initState();
+
+    // Hamburger animation controller
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
+
+    // Background video controller
+    _videoController = VideoPlayerController.asset("assets/images/Firework.mp4")
+      ..initialize().then((_) {
+        _videoController.setLooping(true);
+        _videoController.play();
+        setState(() {}); // refresh when initialized
+      });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _videoController.dispose();
     super.dispose();
   }
 
@@ -55,13 +68,19 @@ class _HomePageState extends State<HomePage>
       ),
       body: Stack(
         children: [
-          // Background GIF
-          Image.asset(
-            "assets/images/firework.gif",
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-          ),
+          // Background Video
+          _videoController.value.isInitialized
+              ? SizedBox.expand(
+            child: FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: _videoController.value.size.width,
+                height: _videoController.value.size.height,
+                child: VideoPlayer(_videoController),
+              ),
+            ),
+          )
+              : const Center(child: CircularProgressIndicator()),
 
           // Main content
           SafeArea(
@@ -208,10 +227,9 @@ class _HomePageState extends State<HomePage>
           children: [
             DrawerHeader(
               child: Image.asset(
-                'assets/images/sasta_logo.png', // replace with your logo's path
-                height: 30, // adjust size as needed
+                'assets/images/sasta_logo.png', // your logo
+                height: 30,
               ),
-
             ),
             _menuItem(Icons.home, "Home", () {}),
             _menuItem(Icons.shopping_bag, "Shop", () {}),

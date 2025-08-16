@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import 'package:project/signup_page.dart';
 import 'package:project/user/home_user.dart';
 import './admin/view_product_page.dart';
@@ -25,19 +26,37 @@ class _LoginPageState extends State<LoginPage> {
   bool _isObscure = true;
   bool isLoginLoading = false;
 
+  late VideoPlayerController _videoController;
+
   @override
   void initState() {
     super.initState();
-    final user = FirebaseAuth.instance.currentUser;
 
+    /// 🔹 Background MP4 video setup
+    _videoController = VideoPlayerController.asset("assets/images/firework.mp4")
+      ..initialize().then((_) {
+        setState(() {}); // refresh when initialized
+        _videoController.setLooping(true);
+        _videoController.setVolume(0); // mute background
+        _videoController.play();
+      });
+
+    /// 🔹 Auto-navigate if already logged in
+    final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       Future.delayed(Duration.zero, () {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => HomePage()), // replace with your class name
+          MaterialPageRoute(builder: (_) => HomePage()),
         );
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _videoController.dispose();
+    super.dispose();
   }
 
   @override
@@ -46,13 +65,22 @@ class _LoginPageState extends State<LoginPage> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // GIF Background
-          Image.asset(
-            "assets/images/firework.gif",
-            fit: BoxFit.cover,
-          ),
+          // 🔹 MP4 Background
+          if (_videoController.value.isInitialized)
+            SizedBox.expand(
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _videoController.value.size.width,
+                  height: _videoController.value.size.height,
+                  child: VideoPlayer(_videoController),
+                ),
+              ),
+            )
+          else
+            Container(color: Colors.black), // fallback until video loads
 
-          // Main Content with Glassmorphism Effect
+          // 🔹 Main Content with Glassmorphism
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -155,14 +183,22 @@ class _LoginPageState extends State<LoginPage> {
                             // Login Button
                             isLoginLoading
                                 ? ShaderMask(
-                              shaderCallback: (bounds) => const LinearGradient(
-                                colors: [Colors.orangeAccent, Colors.orange, Colors.red, Colors.yellow],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ).createShader(bounds),
+                              shaderCallback: (bounds) =>
+                                  const LinearGradient(
+                                    colors: [
+                                      Colors.orangeAccent,
+                                      Colors.orange,
+                                      Colors.red,
+                                      Colors.yellow
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ).createShader(bounds),
                               child: const CircularProgressIndicator(
                                 strokeWidth: 3,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor:
+                                AlwaysStoppedAnimation<Color>(
+                                    Colors.white),
                               ),
                             )
                                 : _buildGradientButton(
@@ -234,7 +270,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
         suffixIcon: suffix,
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.white70),
+        hintStyle: const TextStyle(color: Colors.white70),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.white70, width: 1),
@@ -249,7 +285,8 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildGradientButton({required String text, required VoidCallback onTap}) {
+  Widget _buildGradientButton(
+      {required String text, required VoidCallback onTap}) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
