@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
+
 import '../services/authentication.dart';
 import '../services/validation.dart';
 import 'auth&role_check_page.dart';
@@ -32,9 +34,21 @@ class _SignUpPageState extends State<SignUpPage> {
   bool _isObscure = true;
   bool isRegisterLoading = false;
 
+  late VideoPlayerController _videoController;
+
   @override
   void initState() {
     super.initState();
+
+    // 🔥 Setup video background
+    _videoController = VideoPlayerController.asset("assets/images/firework.mp4")
+      ..initialize().then((_) {
+        _videoController.setLooping(true);
+        _videoController.setVolume(0);
+        _videoController.play();
+        setState(() {}); // refresh after video init
+      });
+
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       Future.delayed(Duration.zero, () {
@@ -45,30 +59,41 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   @override
+  void dispose() {
+    _videoController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background GIF
-          Image.asset(
-            "assets/images/firework.gif",
-            fit: BoxFit.cover,
-          ),
+          // 🎥 Background Video
+          if (_videoController.value.isInitialized)
+            FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: _videoController.value.size.width,
+                height: _videoController.value.size.height,
+                child: VideoPlayer(_videoController),
+              ),
+            )
+          else
+            Container(color: Colors.black), // fallback before video loads
 
           // Form with Glassmorphism
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 30),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
@@ -229,7 +254,6 @@ class _SignUpPageState extends State<SignUpPage> {
                                 ),
                               ),
                             ),
-
 
                             const SizedBox(height: 15),
 
