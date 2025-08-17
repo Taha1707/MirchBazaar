@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:video_player/video_player.dart';
 
+import '../logout_page.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -239,7 +241,7 @@ class _HomePageState extends State<HomePage>
             _menuItem(Icons.contact_support, "Support", () {}),
             _menuItem(Icons.settings, "Settings", () {}),
             _menuItem(Icons.logout, "Logout", () {
-              FirebaseAuth.instance.signOut();
+              LogoutHelper.confirmLogout(context);
             }),
           ],
         ),

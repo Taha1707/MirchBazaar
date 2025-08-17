@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:video_player/video_player.dart';
 
+import '../logout_page.dart';
+
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
 
@@ -240,7 +242,7 @@ class _AdminHomePageState extends State<AdminHomePage>
             _menuItem(Icons.analytics, "Reports", () {}),
             _menuItem(Icons.settings, "Settings", () {}),
             _menuItem(Icons.logout, "Logout", () {
-              FirebaseAuth.instance.signOut();
+              LogoutHelper.confirmLogout(context);
             }),
           ],
         ),
