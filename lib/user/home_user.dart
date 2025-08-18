@@ -1,13 +1,13 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:video_player/video_player.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 
 import '../logout_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({Key? key}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -16,46 +16,146 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late VideoPlayerController _videoController;
 
   @override
   void initState() {
     super.initState();
-
-    // Hamburger animation controller
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 300),
     );
-
-    // Background video controller
-    _videoController = VideoPlayerController.asset("assets/images/Firework.mp4")
-      ..initialize().then((_) {
-        _videoController.setLooping(true);
-        _videoController.play();
-        setState(() {}); // refresh when initialized
-      });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _videoController.dispose();
-    super.dispose();
   }
 
   void _toggleMenu() {
-    if (_controller.isDismissed) {
-      _controller.forward();
-    } else {
+    if (_controller.isCompleted) {
       _controller.reverse();
+    } else {
+      _controller.forward();
     }
+  }
+
+
+
+  Widget _buildCategory(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 220,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 6, // later make this dynamic from Firebase
+              itemBuilder: (context, index) {
+                return Container(
+                  width: 160,
+                  margin: const EdgeInsets.only(right: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white12,
+                    borderRadius: BorderRadius.circular(0),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(16)),
+                            image: DecorationImage(
+                              image: AssetImage("assets/images/product.jpg"),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 🏷 Product Name
+                            const Text(
+                              "Product Name",
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                            ),
+
+                            const SizedBox(height: 6),
+
+                            // 💰 Price + Buttons in one line
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                // 💰 Price
+                                const Text(
+                                  "\$25",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange,
+                                  ),
+                                ),
+
+                                // 🔹 Action Buttons (Transparent, Orange icons)
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      onPressed: () {
+                                        // TODO: Add to cart
+                                      },
+                                      icon: const Icon(Icons.shopping_cart_outlined,
+                                          color: Colors.orange, size: 22),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    IconButton(
+                                      onPressed: () {
+                                        // TODO: Add to wishlist
+                                      },
+                                      icon: const Icon(Icons.favorite_border,
+                                          color: Colors.orange, size: 22),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      )
+
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: true, // 👈 allow hero section behind AppBar
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -70,129 +170,110 @@ class _HomePageState extends State<HomePage>
       ),
       body: Stack(
         children: [
-          // Background Video
-          _videoController.value.isInitialized
-              ? SizedBox.expand(
-            child: FittedBox(
-              fit: BoxFit.cover,
-              child: SizedBox(
-                width: _videoController.value.size.width,
-                height: _videoController.value.size.height,
-                child: VideoPlayer(_videoController),
-              ),
-            ),
-          )
-              : const Center(child: CircularProgressIndicator()),
-
-          // Main content
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  _glassBox(
-                    child: Column(
-                      children: const [
-                        Text(
-                          "Coming Soon 🎉",
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(height: 5),
-                        Text(
-                          "Stay Tuned For Future Updates!",
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.white70,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+          // 🔹 Main content
+          SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 🔹 Hero Section
+                Container(
+                  height: MediaQuery.of(context).size.height * 0.55,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage("assets/images/banner_2.jpg"),
+                      fit: BoxFit.cover,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _featureCard(
-                          icon: Icons.shopping_cart_outlined,
-                          title: "Shop",
-                          onTap: () {},
-                        ),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.black.withOpacity(0.6),
+                          Colors.transparent,
+                        ],
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
                       ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: _featureCard(
-                          icon: Icons.favorite_outline,
-                          title: "Wishlist",
-                          onTap: () {},
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 15),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _featureCard(
-                          icon: Icons.person_outline,
-                          title: "Profile",
-                          onTap: () {},
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: _featureCard(
-                          icon: Icons.settings_outlined,
-                          title: "Settings",
-                          onTap: () {},
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _glassBox(
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          "🔥 Hot Deals",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange,
+                        Text(
+                          "MIRCH BAZAAR",
+                          style: GoogleFonts.lobster(
+                            textStyle: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 36,
+                              shadows: [
+                                Shadow(
+                                  blurRadius: 6,
+                                  color: Colors.black54,
+                                  offset: Offset(2, 2),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
+
                         const SizedBox(height: 10),
-                        Container(
-                          height: 150,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            gradient: const LinearGradient(
-                              colors: [Colors.orange, Colors.red, Colors.yellow],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              "Special Offers Coming Soon!",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                        const Text(
+                          "Discover the finest collection\n"
+                              "of spices, masalas\n"
+                              "and authentic ingredients!",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 16,
+                            height: 1.4, // ✅ Adds nice spacing between lines
+                            shadows: [
+                              Shadow(
+                                blurRadius: 4,
+                                color: Colors.black45,
+                                offset: Offset(1, 1),
                               ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 15),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 18, vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
+                          onPressed: () {},
+                          child: Text(
+                            "Shop Now",
+                            style: GoogleFonts.breeSerif(
+                              textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // ✅ Text color white
+
+                            ),
+                          ),
+
+                        ),
                         )
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // 🔹 Categories + Products
+                _buildCategory("Spices"),
+                _buildCategory("Omesigal Masala"),
+                _buildCategory("Wekopcr"),
+                _buildCategory("Cogarive"),
+              ],
             ),
           ),
 
@@ -322,3 +403,4 @@ class _HomePageState extends State<HomePage>
     );
   }
 }
+
