@@ -1,3 +1,4 @@
+
 import 'dart:ui';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -176,6 +177,9 @@ class _AddProductPageState extends State<AddProductPage> {
                         const SizedBox(height: 12),
                         _buildTextField(_descriptionController, 'Description',
                             maxLines: 3),
+                        const SizedBox(height: 12),
+                        _buildTextField(_reviewController, 'Review',
+                            maxLines: 2),
                         const SizedBox(height: 20),
 
                         // Product Image Picker
@@ -222,14 +226,23 @@ class _AddProductPageState extends State<AddProductPage> {
                           width: double.infinity,
                           height: 45,
                           child: isSaving
-                              ? Center(
-                            child: SizedBox(
-                              width: 24, // button ke andar chhota
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 3,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.deepOrange),
-                              ),
+                              ? ShaderMask(
+                            shaderCallback: (bounds) =>
+                                const LinearGradient(
+                                  colors: [
+                                    Colors.orangeAccent,
+                                    Colors.orange,
+                                    Colors.red,
+                                    Colors.yellow,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ).createShader(bounds),
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 3,
+                              valueColor:
+                              AlwaysStoppedAnimation<Color>(
+                                  Colors.white),
                             ),
                           )
                               : GestureDetector(
