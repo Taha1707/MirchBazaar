@@ -1,8 +1,9 @@
+import 'dart:ui';
 import 'dart:typed_data';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EditProductPage extends StatefulWidget {
   final String productId;
@@ -22,9 +23,15 @@ class _EditProductPageState extends State<EditProductPage> {
   late TextEditingController _titleController;
   late TextEditingController _priceController;
   late TextEditingController _descriptionController;
+  late TextEditingController _reviewController;
 
   Uint8List? _imageBytes;
   String? _base64Image;
+
+  Uint8List? _spiceImageBytes;
+  String? _base64SpiceImage;
+
+  bool _availability = true;
   bool isSaving = false;
 
   final ImagePicker _picker = ImagePicker();
@@ -33,20 +40,31 @@ class _EditProductPageState extends State<EditProductPage> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.productData['title']);
-    _priceController = TextEditingController(text: widget.productData['price'].toString());
+    _priceController = TextEditingController(text: widget.productData['pricePer250g']?.toString() ?? '');
     _descriptionController = TextEditingController(text: widget.productData['description']);
+    _reviewController = TextEditingController(text: widget.productData['review']);
+    _availability = widget.productData['availability'] ?? true;
+
     _base64Image = widget.productData['image'];
-    _imageBytes = base64Decode(_base64Image!);
+    _base64SpiceImage = widget.productData['spiceMeterImage'];
+
+    if (_base64Image != null) _imageBytes = base64Decode(_base64Image!);
+    if (_base64SpiceImage != null) _spiceImageBytes = base64Decode(_base64SpiceImage!);
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImage({bool isSpice = false}) async {
     try {
       final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
         final bytes = await pickedFile.readAsBytes();
         setState(() {
-          _imageBytes = bytes;
-          _base64Image = base64Encode(bytes);
+          if (isSpice) {
+            _spiceImageBytes = bytes;
+            _base64SpiceImage = base64Encode(bytes);
+          } else {
+            _imageBytes = bytes;
+            _base64Image = base64Encode(bytes);
+          }
         });
       }
     } catch (e) {
@@ -55,16 +73,14 @@ class _EditProductPageState extends State<EditProductPage> {
   }
 
   Future<void> _updateProduct() async {
-    if (_titleController.text.isEmpty || _priceController.text.isEmpty || _base64Image == null) {
+    if (_titleController.text.isEmpty ||
+        _priceController.text.isEmpty ||
+        _descriptionController.text.isEmpty ||
+        _reviewController.text.isEmpty ||
+        _base64Image == null ||
+        _base64SpiceImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❗ Please complete all required fields')),
-      );
-      return;
-    }
-
-    if (_base64Image!.length > 1000000) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❗ Image too large! Please select a smaller image.')),
+        const SnackBar(content: Text('❗ Please complete all required fields')),
       );
       return;
     }
@@ -76,20 +92,23 @@ class _EditProductPageState extends State<EditProductPage> {
     try {
       await FirebaseFirestore.instance.collection('products').doc(widget.productId).update({
         'title': _titleController.text,
-        'price': double.parse(_priceController.text),
+        'pricePer250g': double.parse(_priceController.text),
         'description': _descriptionController.text,
+        'review': _reviewController.text,
+        'availability': _availability,
         'image': _base64Image,
+        'spiceMeterImage': _base64SpiceImage,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('✅ Product updated successfully')),
+        const SnackBar(content: Text('✅ Product updated successfully')),
       );
 
-      Navigator.pop(context); // Go back after saving
+      Navigator.pop(context);
     } catch (e) {
       print('❌ Error updating product: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❗ Failed to update product')),
+        const SnackBar(content: Text('❗ Failed to update product')),
       );
     } finally {
       setState(() {
@@ -101,96 +120,190 @@ class _EditProductPageState extends State<EditProductPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text(
           'Edit Product',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20, color: Colors.white),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.deepPurple,
-        elevation: 3,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          elevation: 4,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                _buildTextField(_titleController, 'Product Title'),
-                const SizedBox(height: 12),
-                _buildTextField(_priceController, 'Price', isNumber: true),
-                const SizedBox(height: 12),
-                _buildTextField(_descriptionController, 'Description', maxLines: 3),
-                const SizedBox(height: 20),
-                GestureDetector(
-                  onTap: _pickImage,
-                  child: Container(
-                    width: double.infinity,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.deepPurple.withOpacity(0.5), width: 2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: _imageBytes != null
-                        ? SingleChildScrollView(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.memory(_imageBytes!, fit: BoxFit.cover),
-                      ),
-                    )
-                        : Center(child: Text('Tap to select image', style: TextStyle(color: Colors.grey))),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                isSaving
-                    ? const CircularProgressIndicator()
-                    : SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.update),
-                    label: const Text(
-                      'Update Product',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
-                    ),
-                    onPressed: _updateProduct,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+            color: Colors.white,
           ),
         ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.bottomLeft,
+                radius: 1.4,
+                colors: [
+                  Colors.deepOrange,
+                  Colors.black,
+                  Colors.black,
+                  Colors.black,
+                ],
+                stops: [0.1, 0.7, 0.2, 0.2],
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(top: 80),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildTextField(_titleController, 'Product Title'),
+                        const SizedBox(height: 12),
+                        _buildTextField(_priceController, 'Price (250g)', isNumber: true),
+                        const SizedBox(height: 12),
+                        _buildTextField(_descriptionController, 'Description', maxLines: 3),
+                        const SizedBox(height: 20),
+                        GestureDetector(
+                          onTap: () => _pickImage(),
+                          child: _buildImageBox(_imageBytes, "Tap to select product image"),
+                        ),
+                        const SizedBox(height: 20),
+                        GestureDetector(
+                          onTap: () => _pickImage(isSpice: true),
+                          child: _buildImageBox(_spiceImageBytes, "Tap to select spice meter image"),
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.all(10),
+                              child: Text("Availability",
+                                  style: TextStyle(color: Colors.white, fontSize: 16)),
+                            ),
+                            Switch(
+                              value: _availability,
+                              activeColor: Colors.deepOrange,
+                              onChanged: (val) {
+                                setState(() {
+                                  _availability = val;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 45,
+                          child: isSaving
+                              ? Center(
+                            child: SizedBox(
+                              width: 24, // button ke andar chhota
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 3,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.deepOrange),
+                              ),
+                            ),
+                          )
+                              : GestureDetector(
+                            onTap: _updateProduct,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Colors.orangeAccent,
+                                    Colors.red,
+                                    Colors.red,
+                                    Colors.orange,
+                                    Colors.yellow,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  "UPDATE PRODUCT",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTextField(
-      TextEditingController controller,
-      String label, {
-        bool isNumber = false,
-        int maxLines = 1,
-      }) {
+  Widget _buildTextField(TextEditingController controller, String label,
+      {bool isNumber = false, int maxLines = 1}) {
     return TextField(
       controller: controller,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       maxLines: maxLines,
+      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.deepPurple, width: 2),
-          borderRadius: BorderRadius.circular(10),
+        labelStyle: const TextStyle(color: Colors.white70),
+        filled: true,
+        fillColor: Colors.black.withOpacity(0.3),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.white24),
+          borderRadius: BorderRadius.circular(12),
         ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.white54, width: 2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
+    );
+  }
+
+  Widget _buildImageBox(Uint8List? bytes, String text) {
+    return Container(
+      width: double.infinity,
+      height: 150,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.white24, width: 2),
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.black.withOpacity(0.3),
+      ),
+      child: bytes != null
+          ? ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Image.memory(bytes, fit: BoxFit.cover),
+      )
+          : Center(child: Text(text, style: const TextStyle(color: Colors.white70))),
     );
   }
 }

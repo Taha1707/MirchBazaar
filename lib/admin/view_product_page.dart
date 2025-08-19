@@ -1,9 +1,7 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../login_page.dart';
-import '../services/authentication.dart';
 import 'add_product_page.dart';
 import 'edit_product_page.dart';
 
@@ -30,428 +28,346 @@ class _ViewProductPageState extends State<ViewProductPage> {
     }
   }
 
-  void showProductDetailsDialog(BuildContext context, Map<String, dynamic> data) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        int quantity = 1;
-        double unitPrice = (data['price'] as num).toDouble();
-        double totalPrice = unitPrice;
-        bool isLoading = false;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        centerTitle: true,
+        title: const Text(
+          "Product Management",
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+      ),
+      body: Stack(
+        children: [
+          // 🌈 Background Gradient
+          Container(
+            decoration: const BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.bottomLeft,
+                radius: 1.4,
+                colors: [
+                  Colors.deepOrange,
+                  Colors.black,
+                  Colors.black,
+                  Colors.black,
+                ],
+                stops: [0.1, 0.7, 0.2, 0.2],
+              ),
+            ),
+          ),
 
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              contentPadding: EdgeInsets.zero,
-              content: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+          Column(
+            children: [
+              const SizedBox(height: kToolbarHeight + 20),
+
+              // 🔎 Search + ➕ Add
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Row(
                   children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                      child: Image.memory(
-                        base64Decode(data['image']),
-                        height: 200,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Title + Price
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  data['title'] ?? 'No Title',
-                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                    // 🔍 Taller Glassmorphism Search Bar
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+                            ),
+                            child: TextField(
+                              style: const TextStyle(color: Colors.white),
+                              onChanged: (val) {
+                                setState(() => _searchQuery = val.toLowerCase());
+                              },
+                              decoration: const InputDecoration(
+                                hintText: "Search Products...",
+                                hintStyle: TextStyle(color: Colors.white70),
+                                prefixIcon: Icon(Icons.search, color: Colors.orangeAccent),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 8),
                               ),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.deepPurple.shade100,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  'Rs. ${totalPrice.toStringAsFixed(0)}',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.deepPurple,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-
-                          // Description
-                          Text(data['description'] ?? 'No Description',
-                              style: const TextStyle(fontSize: 14)),
-                          const SizedBox(height: 16),
-
-                          // Quantity Selector
-                          Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey.shade400),
-                                    borderRadius: BorderRadius.circular(25),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.remove, size: 18),
-                                        onPressed: () {
-                                          if (quantity > 1) {
-                                            setState(() {
-                                              quantity--;
-                                              totalPrice = unitPrice * quantity;
-                                            });
-                                          }
-                                        },
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        '$quantity',
-                                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      IconButton(
-                                        icon: const Icon(Icons.add, size: 18),
-                                        onPressed: () {
-                                          setState(() {
-                                            quantity++;
-                                            totalPrice = unitPrice * quantity;
-                                          });
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-
-                                // Add to Cart Button
-                                isLoading
-                                    ? const Center(
-                                  child: CircularProgressIndicator(color: Colors.deepPurple),
-                                )
-                                    : ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.deepPurple,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  ),
-                                  onPressed: () async {
-                                    try {
-                                      setState(() {
-                                        isLoading = true;
-                                      });
-
-                                      final user = FirebaseAuth.instance.currentUser;
-
-                                      if (user != null) {
-                                         FirebaseFirestore.instance
-                                            .collection('carts')
-                                            .doc(user.uid)
-                                            .collection('items')
-                                            .add({
-                                          'title': data['title'],
-                                          'price': unitPrice,
-                                          'image': data['image'],
-                                          'quantity': quantity,
-                                          'timestamp': Timestamp.now(),
-                                        });
-
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('🛒 Added $quantity × "${data['title']}" to cart')),
-                                        );
-
-                                        Navigator.pop(context);
-                                      } else {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Please login to add items to cart')),
-                                        );
-                                      }
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Error adding to cart: $e')),
-                                      );
-                                    } finally {
-                                      setState(() {
-                                        isLoading = false;
-                                      });
-                                    }
-                                  },
-                                  icon: const Icon(Icons.add_shopping_cart, color: Colors.white),
-                                  label: const Text('Add to Cart', style: TextStyle(color: Colors.white)),
-                                ),
-                              ],
                             ),
                           ),
-                        ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+
+                    // ➕ Premium Add Button
+                    SizedBox(
+                      height: 42,
+                      width: 60,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const AddProductPage()),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black.withOpacity(0.6),
+                              shadowColor: Colors.orangeAccent.withOpacity(0.8),
+                              elevation: 12,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: const Icon(Icons.add, color: Colors.orangeAccent, size: 22),
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-            );
-          },
-        );
-      },
-    );
-  }
 
-  Future<void> _confirmLogout() async {
-    bool? shouldLogout = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to log out?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurple,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-            ),
-            child: const Text('Logout', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
+              // 📦 Products List
+              Expanded(
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('products')
+                      .orderBy('timestamp', descending: true)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(color: Colors.orange));
+                    }
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return const Center(
+                        child: Text("❗ No products found", style: TextStyle(color: Colors.white70)),
+                      );
+                    }
 
-    if (shouldLogout == true) {
-      await AuthenticationHelper().signOut();
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
-    }
-  }
+                    final products = snapshot.data!.docs.where((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final title = data['title']?.toString().toLowerCase() ?? '';
+                      return title.contains(_searchQuery);
+                    }).toList();
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text('Product Management', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20, color: Colors.white)),
-        actions: [
-          IconButton(icon: const Icon(Icons.logout, color: Colors.white), onPressed: _confirmLogout, tooltip: 'Logout'),
-        ],
-        centerTitle: true,
-        backgroundColor: Colors.deepPurple,
-        elevation: 3,
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Search + Add Button
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    height: 40,
-                    child: TextField(
-                      style: const TextStyle(fontSize: 14),
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value.toLowerCase();
-                        });
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'Search Products...',
-                        prefixIcon: const Icon(Icons.search, color: Colors.deepPurple),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.deepPurple),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                      ),
-                    ),
-                  ),
-                ),
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(12),
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        final doc = products[index];
+                        final data = doc.data() as Map<String, dynamic>;
 
-                const SizedBox(width: 10),
-
-                SizedBox(
-                  height: 40,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AddProductPage()));
-                    },
-                    icon: const Icon(Icons.add, size: 22, color: Colors.white),
-                    label: const SizedBox.shrink(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
-                      padding: const EdgeInsets.only(left: 6),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Product List
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('products').orderBy('timestamp', descending: true).snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text('❗ No products found'));
-                }
-
-                final products = snapshot.data!.docs.where((doc) {
-                  final data = doc.data() as Map<String, dynamic>;
-                  final title = data['title']?.toString().toLowerCase() ?? '';
-                  return title.contains(_searchQuery);
-                }).toList();
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(10),
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    final doc = products[index];
-                    final data = doc.data() as Map<String, dynamic>;
-
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      elevation: 3,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.memory(
-                                base64Decode(data['image']),
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                            child: Card(
+                              color: Colors.white.withOpacity(0.08),
+                              margin: const EdgeInsets.symmetric(vertical: 10),
+                              elevation: 6,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
                               ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          data['title'] ?? 'No Title',
-                                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              child: Padding(
+                                padding: const EdgeInsets.all(14),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // 🖼 Product Image
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: Image.memory(
+                                            base64Decode(data['image']),
+                                            width: 90,
+                                            height: 90,
+                                            fit: BoxFit.cover,
+                                          ),
                                         ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.deepPurple.shade100,
-                                          borderRadius: BorderRadius.circular(8),
+                                        const SizedBox(width: 14),
+
+                                        // 📄 Text + Details
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              // 🔹 Title + Price
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      data['title'] ?? 'No Title',
+                                                      style: const TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(
+                                                        horizontal: 10, vertical: 5),
+                                                    decoration: BoxDecoration(
+                                                      gradient: const LinearGradient(
+                                                        colors: [Colors.orange, Colors.red],
+                                                      ),
+                                                      borderRadius: BorderRadius.circular(10),
+                                                    ),
+                                                    child: Text(
+                                                      (data['pricePer250g'] != null)
+                                                          ? "Rs. ${data['pricePer250g']} (250g)"
+                                                          : "Rs. 0 (250g)",
+                                                      style: const TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+
+                                              const SizedBox(height: 6),
+
+                                              // 📖 Description
+                                              Text(
+                                                data['description'] ?? 'No Description',
+                                                maxLines: 3,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  color: Colors.white70,
+                                                ),
+                                              ),
+
+                                              const SizedBox(height: 10),
+
+                                              // 🔹 Availability + Spice Meter
+                                              Row(
+                                                children: [
+                                                  Text(
+                                                    (data['availability'] == true)
+                                                        ? "✅ Available"
+                                                        : "❌ Not Available",
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: (data['availability'] == true)
+                                                          ? Colors.greenAccent
+                                                          : Colors.redAccent,
+                                                      shadows: [
+                                                        Shadow(
+                                                          color: Colors.black.withOpacity(0.8),
+                                                          blurRadius: 4,
+                                                        )
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+
+                                                  if (data['spiceMeter'] != null)
+                                                    ClipRRect(
+                                                      borderRadius: BorderRadius.circular(6),
+                                                      child: Image.memory(
+                                                        base64Decode(data['spiceMeter']),
+                                                        width: 30,
+                                                        height: 30,
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                        child: Text(
-                                          'Rs. ${data['price'] ?? '0'}',
-                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.deepPurple),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    data['description'] ?? 'No Description',
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Wrap(
-                                    spacing: 10,
-                                    children: [
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => EditProductPage(productId: doc.id, productData: data),
+                                      ],
+                                    ),
+
+                                    const SizedBox(height: 12),
+
+                                    // ✏️ Edit + 🗑 Delete Buttons
+                                    Row(
+                                      children: [
+                                        ElevatedButton.icon(
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => EditProductPage(
+                                                  productId: doc.id,
+                                                  productData: data,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          icon: const Icon(Icons.edit,
+                                              size: 16, color: Colors.greenAccent),
+                                          label: const Text(
+                                            "Edit",
+                                            style: TextStyle(
+                                                fontSize: 13, color: Colors.greenAccent),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.black.withOpacity(0.7),
+                                            elevation: 18,
+                                            shadowColor: Colors.greenAccent.withOpacity(1),
+                                            minimumSize: const Size(90, 42),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              side: const BorderSide(
+                                                  color: Colors.greenAccent, width: 1.5),
                                             ),
-                                          );
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.blue,
-                                          padding: const EdgeInsets.all(10),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                        ),
-                                        child: Container(
-                                          width: 80,
-                                          padding: EdgeInsets.all(4),
-                                          child: Row(
-                                            children: [
-                                              const Icon(Icons.edit, size: 20, color: Colors.white),
-                                              const SizedBox(width: 10,),
-                                              const Text("Edit", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),)
-                                            ],
                                           ),
                                         ),
-                                      ),
-
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          _deleteProduct(doc.id, data['title']);
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.red,
-                                          padding: const EdgeInsets.all(10),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                        ),
-                                        child: Container(
-                                          width: 80,
-                                          padding: EdgeInsets.all(4),
-                                          child: Row(
-                                            children: [
-                                              const Icon(Icons.delete, size: 20, color: Colors.white),
-                                              const SizedBox(width: 10,),
-                                              const Text("Delete", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),)
-                                            ],
+                                        const SizedBox(width: 10),
+                                        ElevatedButton.icon(
+                                          onPressed: () {
+                                            _deleteProduct(doc.id, data['title']);
+                                          },
+                                          icon: const Icon(Icons.delete,
+                                              size: 16, color: Colors.redAccent),
+                                          label: const Text(
+                                            "Delete",
+                                            style: TextStyle(
+                                                fontSize: 13, color: Colors.redAccent),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.black.withOpacity(0.7),
+                                            elevation: 18,
+                                            shadowColor: Colors.redAccent.withOpacity(1),
+                                            minimumSize: const Size(90, 42),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              side: const BorderSide(
+                                                  color: Colors.redAccent, width: 1.5),
+                                            ),
                                           ),
                                         ),
-                                      ),
-
-                                    ],
-                                  ),
-                                ],
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      },
                     );
                   },
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

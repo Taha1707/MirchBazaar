@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:project/admin/view_product_page.dart';
 import 'package:video_player/video_player.dart';
 
 class AdminHomePage extends StatefulWidget {
@@ -234,11 +235,19 @@ class _AdminHomePageState extends State<AdminHomePage>
               ),
             ),
             _menuItem(Icons.dashboard, "Dashboard", () {}),
-            _menuItem(Icons.inventory, "Manage Products", () {}),
+
+            _menuItem(Icons.inventory, "Manage Products", () {
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ViewProductPage()));
+            }),
+
             _menuItem(Icons.receipt_long, "Orders", () {}),
+
             _menuItem(Icons.people, "Customers", () {}),
+
             _menuItem(Icons.analytics, "Reports", () {}),
+
             _menuItem(Icons.settings, "Settings", () {}),
+
             _menuItem(Icons.logout, "Logout", () {
               FirebaseAuth.instance.signOut();
             }),
