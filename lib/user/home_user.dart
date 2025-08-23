@@ -344,14 +344,11 @@ class _HomePageState extends State<HomePage>
                 const SizedBox(height: 20),
 
                 // 🔹 Categories + Products
-                _buildCategory("Spices"),
-                _buildCategory("Omesigal Masala"),
-                _buildCategory("Wekopcr"),
-                _buildCategory("Cogarive"),
+
                 _buildCategory("Mild Spice", "ہلکی مرچ مصالحہ"),
                 _buildCategory("Medium Spice", "درمیانی مرچ مصالحہ"),
                 _buildCategory("Hot Spice", "تیز مرچ مصالحہ"),
-                _buildCategory("Cogarive", "کوگارائیو"),
+
               ],
             ),
           ),
@@ -399,7 +396,7 @@ class _HomePageState extends State<HomePage>
         ),
         child: Text(
           text,
-          style: GoogleFonts.breeSerif(
+          style: GoogleFonts.playfairDisplay(
             textStyle: const TextStyle(
               fontSize: 16,
               letterSpacing: 2,
