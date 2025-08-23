@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:project/user/product_detail_page.dart';
 import '../logout_page.dart';
 import 'cart_page.dart';
 import 'user_drawer.dart';
@@ -16,8 +17,8 @@ class UserProductPage extends StatefulWidget {
 
 class _UserProductPageState extends State<UserProductPage>
     with SingleTickerProviderStateMixin {
-    late AnimationController _controller;
-    String _searchQuery = '';
+  late AnimationController _controller;
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -40,6 +41,18 @@ class _UserProductPageState extends State<UserProductPage>
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: AnimatedIcon(
+            icon: AnimatedIcons.menu_close,
+            progress: _controller,
+            color: Colors.white,
+          ),
+          onPressed: _toggleMenu,
+        ),
+      ),
       body: Stack(
         children: [
           // Gradient background black → deep orange
@@ -63,34 +76,16 @@ class _UserProductPageState extends State<UserProductPage>
             children: [
               const SizedBox(height: 10),
 
-              // Top row: hamburger menu + centered heading
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: AnimatedIcon(
-                        icon: AnimatedIcons.menu_close,
-                        progress: _controller,
-                        color: Colors.white,
-                      ),
-                      onPressed: _toggleMenu,
-                    ),
-                    const Text(
-                      'Products',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
+              const Text(
+                'Products',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 20),
 
               // Search bar with 3 icons
               Padding(
@@ -209,16 +204,28 @@ class _UserProductPageState extends State<UserProductPage>
                       itemBuilder: (context, index) {
                         final data =
                             products[index].data() as Map<String, dynamic>;
+
                         return GestureDetector(
                           onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: const Text(
-                                  "Product Details! Coming Soon",
+                            // Example: Firestore se document fetch karke detail page par bhejna
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProductDetailPage(
+                                    product: {
+                                      "title": data['title'],
+                                      "description": data['description'],
+                                      "pricePer250g": data['pricePer250g'],
+                                      "image": data['image'],
+                                      "category": data['category'],
+                                      "availability": data['availability'],
+                                      "review": data['review'],
+                                      "spiceMeterImage": data['spiceMeterImage'],
+                                      "timestamp": data['timestamp']?.toString(),
+                                    },
+                                  ),
                                 ),
-                                duration: const Duration(milliseconds: 800),
-                              ),
-                            );
+                              );
                           },
                           child: Material(
                             elevation: 6, // yahan elevation control kar

@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -28,6 +29,8 @@ class _AddProductPageState extends State<AddProductPage> {
 
   bool _availability = true;
   bool isSaving = false;
+
+  double _rating = 0.0; // ⭐ review stars
 
   // 🔥 Category dropdown
   String? _selectedCategory;
@@ -78,9 +81,9 @@ class _AddProductPageState extends State<AddProductPage> {
         'title': _titleController.text,
         'pricePer250g': double.parse(_price250gController.text),
         'description': _descriptionController.text,
-        'review': _reviewController.text,
+        'review': _rating,
         'availability': _availability,
-        'category': _selectedCategory, // 🔥 save category in Firebase
+        'category': _selectedCategory,
         'image': _base64Image,
         'spiceMeterImage': _base64SpiceImage,
         'timestamp': FieldValue.serverTimestamp(),
@@ -119,6 +122,7 @@ class _AddProductPageState extends State<AddProductPage> {
     _base64SpiceImage = null;
     _availability = true;
     _selectedCategory = null;
+    _rating = 0.0;
   }
 
   @override
@@ -226,22 +230,6 @@ class _AddProductPageState extends State<AddProductPage> {
 
                         const SizedBox(height: 20),
 
-                        // Product Image Picker
-                        GestureDetector(
-                          onTap: () => _pickImage(),
-                          child: _buildImageBox(
-                              _imageBytes, "Tap to select product image"),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // SpiceMeter Image Picker
-                        GestureDetector(
-                          onTap: () => _pickImage(isSpice: true),
-                          child: _buildImageBox(_spiceImageBytes,
-                              "Tap to select spice meter image"),
-                        ),
-                        const SizedBox(height: 20),
-
                         // Availability Toggle
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -266,6 +254,57 @@ class _AddProductPageState extends State<AddProductPage> {
                             ),
                           ],
                         ),
+                        const SizedBox(height: 20),
+
+                        // rating
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Review",
+                                style: TextStyle(color: Colors.white, fontSize: 16),
+                              ),
+                              const SizedBox(height: 8),
+                              RatingBar.builder(
+                                initialRating: _rating,
+                                minRating: 1,
+                                direction: Axis.horizontal,
+                                allowHalfRating: true,
+                                itemCount: 5,
+                                itemSize: 32,
+                                unratedColor: Colors.white24,
+                                itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                itemBuilder: (context, _) =>
+                                const Icon(Icons.star, color: Colors.orangeAccent),
+                                onRatingUpdate: (rating) {
+                                  setState(() {
+                                    _rating = rating;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Product Image Picker
+                        GestureDetector(
+                          onTap: () => _pickImage(),
+                          child: _buildImageBox(
+                              _imageBytes, "Tap to select product image"),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // SpiceMeter Image Picker
+                        GestureDetector(
+                          onTap: () => _pickImage(isSpice: true),
+                          child: _buildImageBox(_spiceImageBytes,
+                              "Tap to select spice meter image"),
+                        ),
+
                         const SizedBox(height: 20),
 
                         // Save Button

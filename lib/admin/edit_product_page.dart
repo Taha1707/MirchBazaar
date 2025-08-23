@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -34,31 +35,41 @@ class _EditProductPageState extends State<EditProductPage> {
   bool _availability = true;
   bool isSaving = false;
 
-  String? _selectedCategory; // 🔥 New field for category
+  String? _selectedCategory;
+  double _rating = 0.0;
 
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.productData['title']);
-    _priceController = TextEditingController(text: widget.productData['pricePer250g']?.toString() ?? '');
-    _descriptionController = TextEditingController(text: widget.productData['description']);
-    _reviewController = TextEditingController(text: widget.productData['review']);
-    _availability = widget.productData['availability'] ?? true;
+    _titleController = TextEditingController(text: widget.productData['title'] ?? '');
+    _priceController = TextEditingController(
+        text: widget.productData['pricePer250g']?.toString() ?? '');
+    _descriptionController =
+        TextEditingController(text: widget.productData['description'] ?? '');
 
-    _selectedCategory = widget.productData['category'] ?? "Mild"; // 🔥 default
+    _availability = widget.productData['availability'] ?? true;
+    _selectedCategory = widget.productData['category'] ?? "Mild";
 
     _base64Image = widget.productData['image'];
     _base64SpiceImage = widget.productData['spiceMeterImage'];
 
     if (_base64Image != null) _imageBytes = base64Decode(_base64Image!);
-    if (_base64SpiceImage != null) _spiceImageBytes = base64Decode(_base64SpiceImage!);
+    if (_base64SpiceImage != null) {
+      _spiceImageBytes = base64Decode(_base64SpiceImage!);
+    }
+
+    if (widget.productData['review'] != null) {
+      _rating = (widget.productData['review'] as num).toDouble();
+    }
+
   }
 
   Future<void> _pickImage({bool isSpice = false}) async {
     try {
-      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      final XFile? pickedFile =
+      await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
         final bytes = await pickedFile.readAsBytes();
         setState(() {
@@ -94,15 +105,18 @@ class _EditProductPageState extends State<EditProductPage> {
     });
 
     try {
-      await FirebaseFirestore.instance.collection('products').doc(widget.productId).update({
+      await FirebaseFirestore.instance
+          .collection('products')
+          .doc(widget.productId)
+          .update({
         'title': _titleController.text,
-        'pricePer250g': double.parse(_priceController.text),
+        'pricePer250g': double.tryParse(_priceController.text) ?? 0,
         'description': _descriptionController.text,
-        'review': _reviewController.text,
+        'review': _rating,
         'availability': _availability,
         'image': _base64Image,
         'spiceMeterImage': _base64SpiceImage,
-        'category': _selectedCategory, // 🔥 Save category to Firebase
+        'category': _selectedCategory,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -170,34 +184,46 @@ class _EditProductPageState extends State<EditProductPage> {
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.4),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      border:
+                      Border.all(color: Colors.white.withOpacity(0.1)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildTextField(_titleController, 'Product Title'),
+
                         const SizedBox(height: 12),
-                        _buildTextField(_priceController, 'Price (250g)', isNumber: true),
+
+                        _buildTextField(_priceController, 'Price (250g)',
+                            isNumber: true),
+
                         const SizedBox(height: 12),
-                        _buildTextField(_descriptionController, 'Description', maxLines: 3),
+
+                        _buildTextField(_descriptionController, 'Description',
+                            maxLines: 3),
+
                         const SizedBox(height: 20),
 
-                        // 🔥 Category Dropdown
+                        // Category Dropdown
                         DropdownButtonFormField<String>(
                           value: _selectedCategory,
                           dropdownColor: Colors.black87,
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             labelText: "Category",
-                            labelStyle: const TextStyle(color: Colors.white70),
+                            labelStyle:
+                            const TextStyle(color: Colors.white70),
                             filled: true,
                             fillColor: Colors.black.withOpacity(0.3),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                           items: ["Mild", "Spicy", "Hot", "Fiery"]
                               .map((cat) => DropdownMenuItem(
                             value: cat,
-                            child: Text(cat, style: const TextStyle(color: Colors.white)),
+                            child: Text(cat,
+                                style: const TextStyle(
+                                    color: Colors.white)),
                           ))
                               .toList(),
                           onChanged: (val) {
@@ -208,23 +234,51 @@ class _EditProductPageState extends State<EditProductPage> {
                         ),
 
                         const SizedBox(height: 20),
-                        GestureDetector(
-                          onTap: () => _pickImage(),
-                          child: _buildImageBox(_imageBytes, "Tap to select product image"),
+
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Review",
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 16),
+                              ),
+                              const SizedBox(height: 8),
+                              RatingBar.builder(
+                                initialRating: _rating,
+                                minRating: 1,
+                                direction: Axis.horizontal,
+                                allowHalfRating: true,
+                                itemCount: 5,
+                                itemSize: 32,
+                                unratedColor: Colors.white24,
+                                itemPadding: const EdgeInsets.symmetric(
+                                    horizontal: 4.0),
+                                itemBuilder: (context, _) => const Icon(
+                                    Icons.star,
+                                    color: Colors.orangeAccent),
+                                onRatingUpdate: (double value) {
+                                  setState(() {
+                                    _rating = value;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
                         ),
+
                         const SizedBox(height: 20),
-                        GestureDetector(
-                          onTap: () => _pickImage(isSpice: true),
-                          child: _buildImageBox(_spiceImageBytes, "Tap to select spice meter image"),
-                        ),
-                        const SizedBox(height: 20),
+
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Padding(
                               padding: EdgeInsets.all(10),
                               child: Text("Availability",
-                                  style: TextStyle(color: Colors.white, fontSize: 16)),
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 16)),
                             ),
                             Transform.scale(
                               scale: 0.8,
@@ -240,17 +294,36 @@ class _EditProductPageState extends State<EditProductPage> {
                             ),
                           ],
                         ),
+
                         const SizedBox(height: 20),
+
+                        GestureDetector(
+                          onTap: () => _pickImage(),
+                          child: _buildImageBox(
+                              _imageBytes, "Tap to select product image"),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        GestureDetector(
+                          onTap: () => _pickImage(isSpice: true),
+                          child: _buildImageBox(_spiceImageBytes,
+                              "Tap to select spice meter image"),
+                        ),
+                        const SizedBox(height: 20),
+
                         SizedBox(
                           width: double.infinity,
                           child: isSaving
-                              ? Center(
+                              ? const Center(
                             child: SizedBox(
                               width: 24,
                               height: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 3,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.deepOrange),
+                                valueColor:
+                                AlwaysStoppedAnimation<Color>(
+                                    Colors.deepOrange),
                               ),
                             ),
                           )
@@ -292,7 +365,8 @@ class _EditProductPageState extends State<EditProductPage> {
           borderSide: const BorderSide(color: Colors.white54, width: 2),
           borderRadius: BorderRadius.circular(12),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding:
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }
@@ -311,11 +385,14 @@ class _EditProductPageState extends State<EditProductPage> {
         borderRadius: BorderRadius.circular(10),
         child: Image.memory(bytes, fit: BoxFit.cover),
       )
-          : Center(child: Text(text, style: const TextStyle(color: Colors.white70))),
+          : Center(
+          child: Text(text,
+              style: const TextStyle(color: Colors.white70))),
     );
   }
 
-  Widget _buildGradientButton({required String text, required VoidCallback onTap}) {
+  Widget _buildGradientButton(
+      {required String text, required VoidCallback onTap}) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -334,7 +411,9 @@ class _EditProductPageState extends State<EditProductPage> {
         child: Text(
           text,
           style: const TextStyle(
-              letterSpacing: 2, color: Colors.white, fontWeight: FontWeight.bold),
+              letterSpacing: 2,
+              color: Colors.white,
+              fontWeight: FontWeight.bold),
         ),
       ),
     );
