@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:ui';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -34,122 +36,174 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-
-
-  Widget _buildCategory(String title) {
+// 🔹 Category with Urdu + English + Product list
+  Widget _buildCategory(String english, String urdu) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
+          // Heading row with Urdu (right) and English (left)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // ✅ English on the left
+              Text(
+                english,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+
+              // ✅ Urdu on the right
+              Text(
+                urdu,
+                style: GoogleFonts.notoNastaliqUrdu(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textDirection: TextDirection.rtl,
+              ),
+            ],
           ),
+
           const SizedBox(height: 12),
+
+          // 🔹 Product list (dynamic from Firestore now)
           SizedBox(
             height: 220,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: 6, // later make this dynamic from Firebase
-              itemBuilder: (context, index) {
-                return Container(
-                  width: 160,
-                  margin: const EdgeInsets.only(right: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white12,
-                    borderRadius: BorderRadius.circular(0),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(16)),
-                            image: DecorationImage(
-                              image: AssetImage("assets/images/product.jpg"),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
+            child: StreamBuilder(
+              stream:
+              FirebaseFirestore.instance.collection("products").snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final products = snapshot.data!.docs;
+
+                if (products.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      "No products found",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: products.length,
+                  itemBuilder: (context, index) {
+                    final data =
+                    products[index].data() as Map<String, dynamic>;
+
+                    return Container(
+                      width: 160,
+                      margin: const EdgeInsets.only(right: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white12,
+                        borderRadius: BorderRadius.circular(0),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // 🏷 Product Name
-                            const Text(
-                              "Product Name",
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(16),
+                                ),
+                              ),
+                              child: (data['image'] != null &&
+                                  data['image'].toString().isNotEmpty)
+                                  ? Image.memory(
+                                base64Decode(data['image']),
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                              )
+                                  : const Center(
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.white54,
+                                  size: 40,
+                                ),
                               ),
                             ),
-
-                            const SizedBox(height: 6),
-
-                            // 💰 Price + Buttons in one line
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // 💰 Price
-                                const Text(
-                                  "\$25",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.orange,
+                                Text(
+                                  data['title'] ?? "No Name",
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
                                   ),
                                 ),
-
-                                // 🔹 Action Buttons (Transparent, Orange icons)
+                                const SizedBox(height: 6),
                                 Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
                                   children: [
-                                    IconButton(
-                                      onPressed: () {
-                                        // TODO: Add to cart
-                                      },
-                                      icon: const Icon(Icons.shopping_cart_outlined,
-                                          color: Colors.orange, size: 22),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(),
+                                    Text(
+                                      "Rs ${data['pricePer250g'] ?? 0}",
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.orange,
+                                      ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    IconButton(
-                                      onPressed: () {
-                                        // TODO: Add to wishlist
-                                      },
-                                      icon: const Icon(Icons.favorite_border,
-                                          color: Colors.orange, size: 22),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(),
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          onPressed: () {},
+                                          icon: const Icon(
+                                            Icons.shopping_cart_outlined,
+                                            color: Colors.orange,
+                                            size: 22,
+                                          ),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        IconButton(
+                                          onPressed: () {},
+                                          icon: const Icon(
+                                            Icons.favorite_border,
+                                            color: Colors.orange,
+                                            size: 22,
+                                          ),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      )
-
-                    ],
-                  ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 );
               },
             ),
-          ),
+          )
         ],
       ),
     );
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -203,10 +257,12 @@ class _HomePageState extends State<HomePage>
                       children: [
                         Text(
                           "MIRCH BAZAAR",
-                          style: GoogleFonts.lobster(
+                      // lobster
+                          style: GoogleFonts.cinzel(
                             textStyle: const TextStyle(
                               color: Colors.white,
                               fontSize: 36,
+                              fontWeight: FontWeight.w500,
                               shadows: [
                                 Shadow(
                                   blurRadius: 6,
@@ -219,23 +275,27 @@ class _HomePageState extends State<HomePage>
                         ),
 
                         const SizedBox(height: 10),
-                        const Text(
-                          "Discover the finest collection\n"
-                              "of spices, masalas\n"
-                              "and authentic ingredients!",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 16,
-                            height: 1.4, // ✅ Adds nice spacing between lines
-                            shadows: [
-                              Shadow(
-                                blurRadius: 4,
-                                color: Colors.black45,
-                                offset: Offset(1, 1),
-                              ),
-                            ],
+                        Text(
+                          "Discover the finest collection"
+                          "\nof spices, masalas\n"
+                          "and authentic ingredients!",
+                          style: GoogleFonts.poppins(
+                            textStyle: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 16,
+                              height: 1.4, // ✅ Adds nice spacing between lines
+                              shadows: [
+                                Shadow(
+                                  blurRadius: 4,
+                                  color: Colors.black45,
+                                  offset: Offset(1, 1),
+                                ),
+                              ],
+                            ),
                           ),
+                          // textAlign: TextAlign.center, // ✅ keep centered
                         ),
+
 
                         const SizedBox(height: 15),
                         ElevatedButton(
@@ -268,14 +328,71 @@ class _HomePageState extends State<HomePage>
 
                 const SizedBox(height: 20),
 
+                // 🔹 Centered Section Heading (Spices)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Spices",
+                        // lobster
+                        style: GoogleFonts.playfairDisplay(
+                          textStyle: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold
+
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 6),
+                      Center(
+                        child: SizedBox(
+                          width: 300, // set a max width for nice wrapping
+                          child: Text(
+                            "Explore our handpicked authentic spices that bring taste & aroma to your dishes.",
+                            style: GoogleFonts.poppins(
+                              color: Colors.white70,
+                              fontSize: 14,
+                              height: 1.4, // ✅ nice spacing between lines
+                            ),
+                            textAlign: TextAlign.center, // ✅ keeps both lines centered
+                          ),
+                        ),
+                      ),
+
+                    ],
+                  ),
+                ),
+
+
+
+
+
+
+                const SizedBox(height: 20),
                 // 🔹 Categories + Products
-                _buildCategory("Spices"),
-                _buildCategory("Omesigal Masala"),
-                _buildCategory("Wekopcr"),
-                _buildCategory("Cogarive"),
+                _buildCategory("Mild Spice", "ہلکی مرچ مصالحہ"),
+                _buildCategory("Medium Spice", "درمیانی مرچ مصالحہ"),
+                _buildCategory("Hot Spice", "تیز مرچ مصالحہ"),
+                _buildCategory("Cogarive", "کوگارائیو"),
+
+
+
+
+
               ],
+
+
             ),
+
+
           ),
+
+
+
 
           // Animated Hamburger Menu Drawer
           AnimatedBuilder(
@@ -290,8 +407,18 @@ class _HomePageState extends State<HomePage>
           ),
         ],
       ),
+
+
+
     );
+
+
+
+
   }
+
+
+
 
   Widget _buildMenu() {
     return Container(
@@ -341,6 +468,8 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+
+
   // Glassmorphism container
   static Widget _glassBox({required Widget child}) {
     return ClipRRect(
@@ -369,6 +498,8 @@ class _HomePageState extends State<HomePage>
       ),
     );
   }
+
+
 
   // Feature card
   static Widget _featureCard({
