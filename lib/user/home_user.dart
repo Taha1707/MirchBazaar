@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'dart:ui';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-
+import 'package:project/user/user_drawer.dart'; // 👈 custom drawer import
 import '../logout_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,6 +17,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  String _selectedMenu = "Home";
 
   @override
   void initState() {
@@ -34,101 +36,160 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-
-
-  Widget _buildCategory(String title) {
+  // 🔹 Category Widget (English + Urdu + Products)
+  Widget _buildCategory(String english, [String? urdu]) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
+          // Heading row with English + Urdu
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                english,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              if (urdu != null)
+                Text(
+                  urdu,
+                  style: GoogleFonts.notoNastaliqUrdu(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  textDirection: TextDirection.rtl,
+                ),
+            ],
           ),
+
           const SizedBox(height: 12),
+
+          // 🔹 Product list from Firestore
           SizedBox(
             height: 220,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: 6, // later make this dynamic from Firebase
-              itemBuilder: (context, index) {
-                return Container(
-                  width: 160,
-                  margin: const EdgeInsets.only(right: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white12,
-                    borderRadius: BorderRadius.circular(0),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(16)),
-                            image: DecorationImage(
-                              image: AssetImage("assets/images/product.jpg"),
-                              fit: BoxFit.cover,
+            child: StreamBuilder(
+              stream: FirebaseFirestore.instance
+                  .collection("products")
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final products = snapshot.data!.docs;
+                if (products.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      "No products found",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: products.length,
+                  itemBuilder: (context, index) {
+                    final data = products[index].data() as Map<String, dynamic>;
+
+                    return Container(
+                      width: 160,
+                      margin: const EdgeInsets.only(right: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white12,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Product Image
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(16),
+                              ),
+                              child: (data['image'] != null &&
+                                  data['image'].toString().isNotEmpty)
+                                  ? Image.memory(
+                                base64Decode(data['image']),
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                              )
+                                  : const Center(
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.white54,
+                                  size: 40,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // 🏷 Product Name
-                            const Text(
-                              "Product Name",
-                              style: TextStyle(
+
+                          const SizedBox(height: 6),
+
+                          // Product Name
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              data['title'] ?? "No Name",
+                              style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.white,
                               ),
+                              overflow: TextOverflow.ellipsis,
                             ),
+                          ),
 
-                            const SizedBox(height: 6),
+                          const SizedBox(height: 4),
 
-                            // 💰 Price + Buttons in one line
-                            Row(
+                          // Price + Buttons Row
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                // 💰 Price
-                                const Text(
-                                  "\$25",
-                                  style: TextStyle(
+                                Text(
+                                  "Rs ${data['pricePer250g'] ?? 0}",
+                                  style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.orange,
                                   ),
                                 ),
-
-                                // 🔹 Action Buttons (Transparent, Orange icons)
                                 Row(
                                   children: [
                                     IconButton(
                                       onPressed: () {
                                         // TODO: Add to cart
                                       },
-                                      icon: const Icon(Icons.shopping_cart_outlined,
-                                          color: Colors.orange, size: 22),
+                                      icon: const Icon(
+                                        Icons.shopping_cart_outlined,
+                                        color: Colors.orange,
+                                        size: 20,
+                                      ),
                                       padding: EdgeInsets.zero,
                                       constraints: const BoxConstraints(),
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: 6),
                                     IconButton(
                                       onPressed: () {
                                         // TODO: Add to wishlist
                                       },
-                                      icon: const Icon(Icons.favorite_border,
-                                          color: Colors.orange, size: 22),
+                                      icon: const Icon(
+                                        Icons.favorite_border,
+                                        color: Colors.orange,
+                                        size: 20,
+                                      ),
                                       padding: EdgeInsets.zero,
                                       constraints: const BoxConstraints(),
                                     ),
@@ -136,12 +197,11 @@ class _HomePageState extends State<HomePage>
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      )
-
-                    ],
-                  ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -154,7 +214,7 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true, // 👈 allow hero section behind AppBar
+      extendBodyBehindAppBar: true,
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -203,10 +263,11 @@ class _HomePageState extends State<HomePage>
                       children: [
                         Text(
                           "MIRCH BAZAAR",
-                          style: GoogleFonts.lobster(
+                          style: GoogleFonts.cinzel(
                             textStyle: const TextStyle(
                               color: Colors.white,
                               fontSize: 36,
+                              fontWeight: FontWeight.w500,
                               shadows: [
                                 Shadow(
                                   blurRadius: 6,
@@ -217,52 +278,66 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 10),
-                        const Text(
+                        Text(
                           "Discover the finest collection\n"
                               "of spices, masalas\n"
                               "and authentic ingredients!",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 16,
-                            height: 1.4, // ✅ Adds nice spacing between lines
-                            shadows: [
-                              Shadow(
-                                blurRadius: 4,
-                                color: Colors.black45,
-                                offset: Offset(1, 1),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 15),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 18, vertical: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: () {},
-                          child: Text(
-                            "Shop Now",
-                            style: GoogleFonts.breeSerif(
-                              textStyle: const TextStyle(
+                          style: GoogleFonts.poppins(
+                            textStyle: const TextStyle(
+                              color: Colors.white70,
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white, // ✅ Text color white
-
+                              height: 1.4,
+                              shadows: [
+                                Shadow(
+                                  blurRadius: 4,
+                                  color: Colors.black45,
+                                  offset: Offset(1, 1),
+                                ),
+                              ],
                             ),
                           ),
-
                         ),
-                        )
+                        const SizedBox(height: 15),
+                        _buildGradientButton(text: "Shop Now", onTap: () {}),
                       ],
                     ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+                // 🔹 Section Heading
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Spices",
+                        style: GoogleFonts.playfairDisplay(
+                          textStyle: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Center(
+                        child: SizedBox(
+                          width: 300,
+                          child: Text(
+                            "Explore our handpicked authentic spices that bring taste & aroma to your dishes.",
+                            style: GoogleFonts.poppins(
+                              color: Colors.white70,
+                              fontSize: 14,
+                              height: 1.4,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
@@ -273,18 +348,28 @@ class _HomePageState extends State<HomePage>
                 _buildCategory("Omesigal Masala"),
                 _buildCategory("Wekopcr"),
                 _buildCategory("Cogarive"),
+                _buildCategory("Mild Spice", "ہلکی مرچ مصالحہ"),
+                _buildCategory("Medium Spice", "درمیانی مرچ مصالحہ"),
+                _buildCategory("Hot Spice", "تیز مرچ مصالحہ"),
+                _buildCategory("Cogarive", "کوگارائیو"),
               ],
             ),
           ),
 
-          // Animated Hamburger Menu Drawer
+          // ✅ Replaced with UserDrawer
           AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
               double slide = 250 * _controller.value;
               return Transform.translate(
                 offset: Offset(-250 + slide, 0),
-                child: _buildMenu(),
+                child: UserDrawer(
+                  onMenuItemSelected: (selected) {
+                    setState(() {
+                      _selectedMenu = selected;
+                    });
+                  },
+                ),
               );
             },
           ),
@@ -293,114 +378,37 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget _buildMenu() {
-    return Container(
-      width: 250,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.9),
-        borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(20),
-          bottomRight: Radius.circular(20),
-        ),
-      ),
-      child: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              child: Image.asset(
-                'assets/images/sasta_logo.png', // your logo
-                height: 30,
-              ),
-            ),
-            _menuItem(Icons.home, "Home", () {}),
-            _menuItem(Icons.shopping_bag, "Shop", () {}),
-            _menuItem(Icons.favorite, "Wishlist", () {}),
-            _menuItem(Icons.receipt_long, "My Orders", () {}),
-            _menuItem(Icons.local_offer, "Offers", () {}),
-            _menuItem(Icons.contact_support, "Support", () {}),
-            _menuItem(Icons.settings, "Settings", () {}),
-            _menuItem(Icons.logout, "Logout", () {
-              LogoutHelper.confirmLogout(context);
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _menuItem(IconData icon, String title, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.orange),
-      title: Text(
-        title,
-        style: const TextStyle(color: Colors.white, fontSize: 16),
-      ),
-      onTap: onTap,
-    );
-  }
-
-  // Glassmorphism container
-  static Widget _glassBox({required Widget child}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.3),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
-
-  // Feature card
-  static Widget _featureCard({
-    required IconData icon,
-    required String title,
+  Widget _buildGradientButton({
+    required String text,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: _glassBox(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [Colors.orange, Colors.yellow],
-              ).createShader(bounds),
-              child: Icon(icon, color: Colors.white, size: 40),
+    return Container(
+      width: 120,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Colors.orange, Colors.red, Colors.yellow],
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+        child: Text(
+          text,
+          style: GoogleFonts.breeSerif(
+            textStyle: const TextStyle(
+              fontSize: 16,
+              letterSpacing: 2,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            )
-          ],
+          ),
         ),
       ),
     );
   }
 }
-

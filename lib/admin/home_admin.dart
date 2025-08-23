@@ -1,9 +1,9 @@
-
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project/admin/view_product_page.dart';
 import 'package:video_player/video_player.dart';
+import 'admin_drawer.dart'; // <- reusable drawer
 
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
@@ -71,7 +71,7 @@ class _AdminHomePageState extends State<AdminHomePage>
       ),
       body: Stack(
         children: [
-          // Background Video (instead of GIF)
+          // Background Video
           if (_videoController.value.isInitialized)
             SizedBox.expand(
               child: FittedBox(
@@ -199,73 +199,23 @@ class _AdminHomePageState extends State<AdminHomePage>
             ),
           ),
 
-          // Animated Hamburger Menu Drawer (Admin)
+          // Animated Hamburger Menu Drawer (Reusable)
           AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
               double slide = 250 * _controller.value;
               return Transform.translate(
                 offset: Offset(-250 + slide, 0),
-                child: _buildMenu(),
+                child: AdminDrawer(
+                  onMenuItemSelected: (title) {
+                    _controller.reverse();
+                  },
+                ),
               );
             },
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildMenu() {
-    return Container(
-      width: 250,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.9),
-        borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(20),
-          bottomRight: Radius.circular(20),
-        ),
-      ),
-      child: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              child: Image.asset(
-                'assets/images/sasta_logo.png',
-              ),
-            ),
-            _menuItem(Icons.dashboard, "Dashboard", () {}),
-
-            _menuItem(Icons.inventory, "Manage Products", () {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ViewProductPage()));
-            }),
-
-            _menuItem(Icons.receipt_long, "Orders", () {}),
-
-            _menuItem(Icons.people, "Customers", () {}),
-
-            _menuItem(Icons.analytics, "Reports", () {}),
-
-            _menuItem(Icons.settings, "Settings", () {}),
-
-            _menuItem(Icons.logout, "Logout", () {
-              FirebaseAuth.instance.signOut();
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _menuItem(IconData icon, String title, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.orange),
-      title: Text(
-        title,
-        style: const TextStyle(color: Colors.white, fontSize: 16),
-      ),
-      onTap: onTap,
     );
   }
 

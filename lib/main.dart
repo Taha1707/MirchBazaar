@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'CRUD Demo',
+      title: 'Mirch Bazaar',
       home: Auth_Role_Check(),
     );
   }

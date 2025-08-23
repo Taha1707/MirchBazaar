@@ -1,4 +1,3 @@
-
 import 'dart:ui';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -30,6 +29,10 @@ class _AddProductPageState extends State<AddProductPage> {
   bool _availability = true;
   bool isSaving = false;
 
+  // 🔥 Category dropdown
+  String? _selectedCategory;
+  final List<String> _categories = ["Mild", "Spicy", "Hot", "Fiery"];
+
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage({bool isSpice = false}) async {
@@ -56,8 +59,10 @@ class _AddProductPageState extends State<AddProductPage> {
   Future<void> _saveProduct() async {
     if (_titleController.text.isEmpty ||
         _price250gController.text.isEmpty ||
+        _descriptionController.text.isEmpty ||
         _base64Image == null ||
-        _base64SpiceImage == null) {
+        _base64SpiceImage == null ||
+        _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('❗ Please complete all required fields')),
       );
@@ -75,6 +80,7 @@ class _AddProductPageState extends State<AddProductPage> {
         'description': _descriptionController.text,
         'review': _reviewController.text,
         'availability': _availability,
+        'category': _selectedCategory, // 🔥 save category in Firebase
         'image': _base64Image,
         'spiceMeterImage': _base64SpiceImage,
         'timestamp': FieldValue.serverTimestamp(),
@@ -112,6 +118,7 @@ class _AddProductPageState extends State<AddProductPage> {
     _spiceImageBytes = null;
     _base64SpiceImage = null;
     _availability = true;
+    _selectedCategory = null;
   }
 
   @override
@@ -153,7 +160,7 @@ class _AddProductPageState extends State<AddProductPage> {
 
           // Content
           Container(
-            margin: const EdgeInsets.only(top: 80),
+            margin: const EdgeInsets.only(top: 50),
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: ClipRRect(
@@ -177,9 +184,46 @@ class _AddProductPageState extends State<AddProductPage> {
                         const SizedBox(height: 12),
                         _buildTextField(_descriptionController, 'Description',
                             maxLines: 3),
-                        const SizedBox(height: 12),
-                        _buildTextField(_reviewController, 'Review',
-                            maxLines: 2),
+                        const SizedBox(height: 20),
+
+                        // 🔥 Category Dropdown
+                        DropdownButtonFormField<String>(
+                          value: _selectedCategory,
+                          items: _categories
+                              .map((cat) => DropdownMenuItem(
+                            value: cat,
+                            child: Text(cat,
+                                style: const TextStyle(
+                                    color: Colors.white)),
+                          ))
+                              .toList(),
+                          onChanged: (val) {
+                            setState(() {
+                              _selectedCategory = val;
+                            });
+                          },
+                          decoration: InputDecoration(
+                            labelText: "Category",
+                            labelStyle:
+                            const TextStyle(color: Colors.white70),
+                            filled: true,
+                            fillColor: Colors.black.withOpacity(0.3),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide:
+                              const BorderSide(color: Colors.white24),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                  color: Colors.white54, width: 2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          dropdownColor: Colors.black87,
+                        ),
+
                         const SizedBox(height: 20),
 
                         // Product Image Picker
@@ -193,8 +237,8 @@ class _AddProductPageState extends State<AddProductPage> {
                         // SpiceMeter Image Picker
                         GestureDetector(
                           onTap: () => _pickImage(isSpice: true),
-                          child: _buildImageBox(
-                              _spiceImageBytes, "Tap to select spice meter image"),
+                          child: _buildImageBox(_spiceImageBytes,
+                              "Tap to select spice meter image"),
                         ),
                         const SizedBox(height: 20),
 
@@ -208,14 +252,17 @@ class _AddProductPageState extends State<AddProductPage> {
                                   style: TextStyle(
                                       color: Colors.white, fontSize: 16)),
                             ),
-                            Switch(
-                              value: _availability,
-                              activeColor: Colors.deepOrange,
-                              onChanged: (val) {
-                                setState(() {
-                                  _availability = val;
-                                });
-                              },
+                            Transform.scale(
+                              scale: 0.8,
+                              child: Switch(
+                                value: _availability,
+                                activeColor: Colors.deepOrange,
+                                onChanged: (val) {
+                                  setState(() {
+                                    _availability = val;
+                                  });
+                                },
+                              ),
                             ),
                           ],
                         ),
@@ -224,56 +271,22 @@ class _AddProductPageState extends State<AddProductPage> {
                         // Save Button
                         SizedBox(
                           width: double.infinity,
-                          height: 45,
                           child: isSaving
-                              ? ShaderMask(
-                            shaderCallback: (bounds) =>
-                                const LinearGradient(
-                                  colors: [
-                                    Colors.orangeAccent,
-                                    Colors.orange,
-                                    Colors.red,
-                                    Colors.yellow,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ).createShader(bounds),
-                            child: const CircularProgressIndicator(
-                              strokeWidth: 3,
-                              valueColor:
-                              AlwaysStoppedAnimation<Color>(
-                                  Colors.white),
+                              ? Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 3,
+                                valueColor:
+                                AlwaysStoppedAnimation<Color>(
+                                    Colors.deepOrange),
+                              ),
                             ),
                           )
-                              : GestureDetector(
+                              : _buildGradientButton(
+                            text: "SAVE PRODUCT",
                             onTap: _saveProduct,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Colors.orangeAccent,
-                                    Colors.red,
-                                    Colors.red,
-                                    Colors.orange,
-                                    Colors.yellow,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  "SAVE PRODUCT",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 3,
-                                  ),
-                                ),
-                              ),
-                            ),
                           ),
                         )
                       ],
@@ -332,6 +345,34 @@ class _AddProductPageState extends State<AddProductPage> {
           : Center(
         child:
         Text(text, style: const TextStyle(color: Colors.white70)),
+      ),
+    );
+  }
+
+  Widget _buildGradientButton(
+      {required String text, required VoidCallback onTap}) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Colors.orange, Colors.red, Colors.yellow],
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+              letterSpacing: 2,
+              color: Colors.white,
+              fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }

@@ -1,4 +1,3 @@
-
 import 'dart:ui';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -35,6 +34,8 @@ class _EditProductPageState extends State<EditProductPage> {
   bool _availability = true;
   bool isSaving = false;
 
+  String? _selectedCategory; // 🔥 New field for category
+
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -45,6 +46,8 @@ class _EditProductPageState extends State<EditProductPage> {
     _descriptionController = TextEditingController(text: widget.productData['description']);
     _reviewController = TextEditingController(text: widget.productData['review']);
     _availability = widget.productData['availability'] ?? true;
+
+    _selectedCategory = widget.productData['category'] ?? "Mild"; // 🔥 default
 
     _base64Image = widget.productData['image'];
     _base64SpiceImage = widget.productData['spiceMeterImage'];
@@ -77,9 +80,9 @@ class _EditProductPageState extends State<EditProductPage> {
     if (_titleController.text.isEmpty ||
         _priceController.text.isEmpty ||
         _descriptionController.text.isEmpty ||
-        _reviewController.text.isEmpty ||
         _base64Image == null ||
-        _base64SpiceImage == null) {
+        _base64SpiceImage == null ||
+        _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('❗ Please complete all required fields')),
       );
@@ -99,6 +102,7 @@ class _EditProductPageState extends State<EditProductPage> {
         'availability': _availability,
         'image': _base64Image,
         'spiceMeterImage': _base64SpiceImage,
+        'category': _selectedCategory, // 🔥 Save category to Firebase
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -154,7 +158,7 @@ class _EditProductPageState extends State<EditProductPage> {
             ),
           ),
           Container(
-            margin: const EdgeInsets.only(top: 80),
+            margin: const EdgeInsets.only(top: 50),
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: ClipRRect(
@@ -177,6 +181,33 @@ class _EditProductPageState extends State<EditProductPage> {
                         const SizedBox(height: 12),
                         _buildTextField(_descriptionController, 'Description', maxLines: 3),
                         const SizedBox(height: 20),
+
+                        // 🔥 Category Dropdown
+                        DropdownButtonFormField<String>(
+                          value: _selectedCategory,
+                          dropdownColor: Colors.black87,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            labelText: "Category",
+                            labelStyle: const TextStyle(color: Colors.white70),
+                            filled: true,
+                            fillColor: Colors.black.withOpacity(0.3),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          items: ["Mild", "Spicy", "Hot", "Fiery"]
+                              .map((cat) => DropdownMenuItem(
+                            value: cat,
+                            child: Text(cat, style: const TextStyle(color: Colors.white)),
+                          ))
+                              .toList(),
+                          onChanged: (val) {
+                            setState(() {
+                              _selectedCategory = val;
+                            });
+                          },
+                        ),
+
+                        const SizedBox(height: 20),
                         GestureDetector(
                           onTap: () => _pickImage(),
                           child: _buildImageBox(_imageBytes, "Tap to select product image"),
@@ -195,25 +226,27 @@ class _EditProductPageState extends State<EditProductPage> {
                               child: Text("Availability",
                                   style: TextStyle(color: Colors.white, fontSize: 16)),
                             ),
-                            Switch(
-                              value: _availability,
-                              activeColor: Colors.deepOrange,
-                              onChanged: (val) {
-                                setState(() {
-                                  _availability = val;
-                                });
-                              },
+                            Transform.scale(
+                              scale: 0.8,
+                              child: Switch(
+                                value: _availability,
+                                activeColor: Colors.deepOrange,
+                                onChanged: (val) {
+                                  setState(() {
+                                    _availability = val;
+                                  });
+                                },
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 20),
                         SizedBox(
                           width: double.infinity,
-                          height: 45,
                           child: isSaving
                               ? Center(
                             child: SizedBox(
-                              width: 24, // button ke andar chhota
+                              width: 24,
                               height: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 3,
@@ -221,35 +254,9 @@ class _EditProductPageState extends State<EditProductPage> {
                               ),
                             ),
                           )
-                              : GestureDetector(
+                              : _buildGradientButton(
+                            text: "UPDATE PRODUCT",
                             onTap: _updateProduct,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Colors.orangeAccent,
-                                    Colors.red,
-                                    Colors.red,
-                                    Colors.orange,
-                                    Colors.yellow,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  "UPDATE PRODUCT",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 2,
-                                  ),
-                                ),
-                              ),
-                            ),
                           ),
                         ),
                       ],
@@ -307,5 +314,29 @@ class _EditProductPageState extends State<EditProductPage> {
           : Center(child: Text(text, style: const TextStyle(color: Colors.white70))),
     );
   }
-}
 
+  Widget _buildGradientButton({required String text, required VoidCallback onTap}) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Colors.orange, Colors.red, Colors.yellow],
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+              letterSpacing: 2, color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+}
