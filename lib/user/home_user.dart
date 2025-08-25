@@ -341,17 +341,58 @@ class _HomePageState extends State<HomePage>
                   ),
                 ),
 
-                const SizedBox(height: 20),
+// ✅ Responsive Spice Features Section (Centered)
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 800), // keeps it neat on big screens
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          if (constraints.maxWidth > 600) {
+                            // ✅ For wider screens → row layout
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(child: _buildFeature(Icons.local_fire_department, "Hot & Spicy")),
+                                Expanded(child: _buildFeature(Icons.eco, "Natural & Pure")),
+                                Expanded(child: _buildFeature(Icons.restaurant, "Perfect Taste")),
+                                Expanded(child: _buildFeature(Icons.spa, "Aromatic")),
+                              ],
+                            );
+                          } else {
+                            // ✅ For small screens → auto-wrap
+                            return Wrap(
+                              spacing: 24,
+                              runSpacing: 20,
+                              alignment: WrapAlignment.center, // ✅ center align features
+                              children: [
+                                _buildFeature(Icons.local_fire_department, "Hot & Spicy"),
+                                _buildFeature(Icons.eco, "Natural & Pure"),
+                                _buildFeature(Icons.restaurant, "Perfect Taste"),
+                                _buildFeature(Icons.spa, "Aromatic"),
+                              ],
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+
+
+    const SizedBox(height: 20),
 
                 // 🔹 Categories + Products
-                _buildCategory("Spices"),
-                _buildCategory("Omesigal Masala"),
-                _buildCategory("Wekopcr"),
-                _buildCategory("Cogarive"),
+
                 _buildCategory("Mild Spice", "ہلکی مرچ مصالحہ"),
+                const SizedBox(height: 20),
+                const PromoBanner(),
+                const SizedBox(height: 20),
                 _buildCategory("Medium Spice", "درمیانی مرچ مصالحہ"),
+                const SizedBox(height: 10),
                 _buildCategory("Hot Spice", "تیز مرچ مصالحہ"),
-                _buildCategory("Cogarive", "کوگارائیو"),
+
               ],
             ),
           ),
@@ -378,6 +419,8 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+
+
   Widget _buildGradientButton({
     required String text,
     required VoidCallback onTap,
@@ -399,7 +442,7 @@ class _HomePageState extends State<HomePage>
         ),
         child: Text(
           text,
-          style: GoogleFonts.breeSerif(
+          style: GoogleFonts.playfairDisplay(
             textStyle: const TextStyle(
               fontSize: 16,
               letterSpacing: 2,
@@ -408,6 +451,94 @@ class _HomePageState extends State<HomePage>
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+
+Widget _buildFeature(IconData icon, String label) {
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    mainAxisAlignment: MainAxisAlignment.center,
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white12,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.orange, width: 1.5),
+        ),
+        child: Icon(
+          icon,
+          size: 22,
+          color: Colors.orange,
+        ),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        label,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    ],
+  );
+}
+// ✅ Promotional Banner Widget (with same gradient as button)
+class PromoBanner extends StatelessWidget {
+  const PromoBanner({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Colors.orange,
+            Colors.red,
+            Colors.yellow,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text(
+            "🌶️ MirchBazaar's Summer Fever",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            "🔥 Enjoy 20% Off Instantly!",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
