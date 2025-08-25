@@ -24,21 +24,26 @@ class _EditProductPageState extends State<EditProductPage> {
   late TextEditingController _titleController;
   late TextEditingController _priceController;
   late TextEditingController _descriptionController;
-  late TextEditingController _reviewController;
 
   Uint8List? _imageBytes;
   String? _base64Image;
 
-  Uint8List? _spiceImageBytes;
-  String? _base64SpiceImage;
-
   bool _availability = true;
   bool isSaving = false;
 
-  String? _selectedCategory;
-  double _rating = 0.0;
+  List<String> _selectedCategories = [];
+  double _spiceMeter = 0.0;
+  double _review = 0.0;
 
   final ImagePicker _picker = ImagePicker();
+
+  final List<String> categories = [
+    "Rice & Biryani Specials",
+    "Daily Cooking Masalas",
+    "Karahi & Curry Lovers",
+    "BBQ & Grilled Specials",
+    "Snacks & Street Food",
+  ];
 
   @override
   void initState() {
@@ -50,36 +55,31 @@ class _EditProductPageState extends State<EditProductPage> {
         TextEditingController(text: widget.productData['description'] ?? '');
 
     _availability = widget.productData['availability'] ?? true;
-    _selectedCategory = widget.productData['category'] ?? "Mild";
-
     _base64Image = widget.productData['image'];
-    _base64SpiceImage = widget.productData['spiceMeterImage'];
-
     if (_base64Image != null) _imageBytes = base64Decode(_base64Image!);
-    if (_base64SpiceImage != null) {
-      _spiceImageBytes = base64Decode(_base64SpiceImage!);
+
+    if (widget.productData['category'] != null) {
+      _selectedCategories = List<String>.from(widget.productData['category']);
+    }
+
+    if (widget.productData['spiceMeter'] != null) {
+      _spiceMeter = (widget.productData['spiceMeter'] as num).toDouble();
     }
 
     if (widget.productData['review'] != null) {
-      _rating = (widget.productData['review'] as num).toDouble();
+      _review = (widget.productData['review'] as num).toDouble();
     }
-
   }
 
-  Future<void> _pickImage({bool isSpice = false}) async {
+  Future<void> _pickImage() async {
     try {
       final XFile? pickedFile =
       await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
         final bytes = await pickedFile.readAsBytes();
         setState(() {
-          if (isSpice) {
-            _spiceImageBytes = bytes;
-            _base64SpiceImage = base64Encode(bytes);
-          } else {
-            _imageBytes = bytes;
-            _base64Image = base64Encode(bytes);
-          }
+          _imageBytes = bytes;
+          _base64Image = base64Encode(bytes);
         });
       }
     } catch (e) {
@@ -92,8 +92,7 @@ class _EditProductPageState extends State<EditProductPage> {
         _priceController.text.isEmpty ||
         _descriptionController.text.isEmpty ||
         _base64Image == null ||
-        _base64SpiceImage == null ||
-        _selectedCategory == null) {
+        _selectedCategories.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('❗ Please complete all required fields')),
       );
@@ -112,11 +111,11 @@ class _EditProductPageState extends State<EditProductPage> {
         'title': _titleController.text,
         'pricePer250g': double.tryParse(_priceController.text) ?? 0,
         'description': _descriptionController.text,
-        'review': _rating,
+        'review': _review,
         'availability': _availability,
         'image': _base64Image,
-        'spiceMeterImage': _base64SpiceImage,
-        'category': _selectedCategory,
+        'category': _selectedCategories,
+        'spiceMeter': _spiceMeter,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -204,69 +203,95 @@ class _EditProductPageState extends State<EditProductPage> {
 
                         const SizedBox(height: 20),
 
-                        // Category Dropdown
-                        DropdownButtonFormField<String>(
-                          value: _selectedCategory,
-                          dropdownColor: Colors.black87,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            labelText: "Category",
-                            labelStyle:
-                            const TextStyle(color: Colors.white70),
-                            filled: true,
-                            fillColor: Colors.black.withOpacity(0.3),
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          items: ["Mild", "Spicy", "Hot", "Fiery"]
-                              .map((cat) => DropdownMenuItem(
-                            value: cat,
-                            child: Text(cat,
+                        const Text(
+                          "Select Categories",
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                        const SizedBox(height: 8),
+                        Column(
+                          children: categories
+                              .map((cat) => CheckboxListTile(
+                            value: _selectedCategories.contains(cat),
+                            activeColor: Colors.deepOrange,
+                            checkColor: Colors.white,
+                            title: Text(cat,
                                 style: const TextStyle(
-                                    color: Colors.white)),
+                                    color: Colors.white70)),
+                            onChanged: (val) {
+                              setState(() {
+                                if (val == true) {
+                                  _selectedCategories.add(cat);
+                                } else {
+                                  _selectedCategories.remove(cat);
+                                }
+                              });
+                            },
                           ))
                               .toList(),
-                          onChanged: (val) {
-                            setState(() {
-                              _selectedCategory = val;
-                            });
-                          },
                         ),
 
                         const SizedBox(height: 20),
 
-                        Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Review",
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 16),
-                              ),
-                              const SizedBox(height: 8),
-                              RatingBar.builder(
-                                initialRating: _rating,
-                                minRating: 1,
-                                direction: Axis.horizontal,
-                                allowHalfRating: true,
-                                itemCount: 5,
-                                itemSize: 32,
-                                unratedColor: Colors.white24,
-                                itemPadding: const EdgeInsets.symmetric(
-                                    horizontal: 4.0),
-                                itemBuilder: (context, _) => const Icon(
-                                    Icons.star,
-                                    color: Colors.orangeAccent),
-                                onRatingUpdate: (double value) {
-                                  setState(() {
-                                    _rating = value;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
+                        const Text("Spice Meter",
+                            style:
+                            TextStyle(color: Colors.white, fontSize: 16)),
+                        const SizedBox(height: 8),
+                        RatingBar.builder(
+                          initialRating: _spiceMeter,
+                          minRating: 1,
+                          direction: Axis.horizontal,
+                          allowHalfRating: true, // same as add
+                          itemCount: 6,          // same as add
+                          itemSize: 26,          // same as add
+                          unratedColor: Colors.white24,
+                          itemBuilder: (context, index) {
+                            // Gradient color from green → yellow → red
+                            final colors = [
+                              Colors.green,
+                              Colors.yellow,
+                              Colors.red
+                            ];
+                            Color color;
+                            if (index < 2) {
+                              color = colors[0];
+                            } else if (index < 4) {
+                              color = colors[1];
+                            } else {
+                              color = colors[2];
+                            }
+                            return Icon(Icons.whatshot, color: color); // fixed here
+                          },
+                          onRatingUpdate: (rating) {
+                            setState(() {
+                              _spiceMeter = rating;
+                            });
+                          },
+                        ),
+
+
+                        const SizedBox(height: 20),
+
+                        const Text("Review",
+                            style:
+                            TextStyle(color: Colors.white, fontSize: 16)),
+                        const SizedBox(height: 8),
+                        RatingBar.builder(
+                          initialRating: _review,
+                          minRating: 1,
+                          direction: Axis.horizontal,
+                          allowHalfRating: true,
+                          itemCount: 5,
+                          itemSize: 32,
+                          unratedColor: Colors.white24,
+                          itemPadding:
+                          const EdgeInsets.symmetric(horizontal: 4.0),
+                          itemBuilder: (context, _) =>
+                          const Icon(Icons.star, color: Colors.orangeAccent),
+                          onRatingUpdate: (value) {
+                            setState(() {
+                              _review = value;
+                            });
+                          },
                         ),
 
                         const SizedBox(height: 20),
@@ -303,13 +328,6 @@ class _EditProductPageState extends State<EditProductPage> {
                               _imageBytes, "Tap to select product image"),
                         ),
 
-                        const SizedBox(height: 20),
-
-                        GestureDetector(
-                          onTap: () => _pickImage(isSpice: true),
-                          child: _buildImageBox(_spiceImageBytes,
-                              "Tap to select spice meter image"),
-                        ),
                         const SizedBox(height: 20),
 
                         SizedBox(

@@ -24,34 +24,33 @@ class _AddProductPageState extends State<AddProductPage> {
   Uint8List? _imageBytes;
   String? _base64Image;
 
-  Uint8List? _spiceImageBytes;
-  String? _base64SpiceImage;
-
   bool _availability = true;
   bool isSaving = false;
 
   double _rating = 0.0; // ⭐ review stars
+  double _spiceMeter = 0.0; // 🌶️ spice meter stars
 
-  // 🔥 Category dropdown
-  String? _selectedCategory;
-  final List<String> _categories = ["Mild", "Spicy", "Hot", "Fiery"];
+  // 🔥 Fixed Categories (Checkbox style)
+  final List<String> _categories = [
+    "Rice & Biryani Specials",
+    "Daily Cooking Masalas",
+    "Karahi & Curry Lovers",
+    "BBQ & Grilled Specials",
+    "Snacks & Street Food"
+  ];
+  List<String> _selectedCategories = [];
 
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> _pickImage({bool isSpice = false}) async {
+  Future<void> _pickImage() async {
     try {
       final XFile? pickedFile =
       await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
         final bytes = await pickedFile.readAsBytes();
         setState(() {
-          if (isSpice) {
-            _spiceImageBytes = bytes;
-            _base64SpiceImage = base64Encode(bytes);
-          } else {
-            _imageBytes = bytes;
-            _base64Image = base64Encode(bytes);
-          }
+          _imageBytes = bytes;
+          _base64Image = base64Encode(bytes);
         });
       }
     } catch (e) {
@@ -64,8 +63,9 @@ class _AddProductPageState extends State<AddProductPage> {
         _price250gController.text.isEmpty ||
         _descriptionController.text.isEmpty ||
         _base64Image == null ||
-        _base64SpiceImage == null ||
-        _selectedCategory == null) {
+        _selectedCategories.isEmpty ||
+        _availability == null ||
+        _spiceMeter == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('❗ Please complete all required fields')),
       );
@@ -82,10 +82,10 @@ class _AddProductPageState extends State<AddProductPage> {
         'pricePer250g': double.parse(_price250gController.text),
         'description': _descriptionController.text,
         'review': _rating,
+        'spiceMeter': _spiceMeter, // 🌶️ stars instead of image
         'availability': _availability,
-        'category': _selectedCategory,
+        'category': _selectedCategories,
         'image': _base64Image,
-        'spiceMeterImage': _base64SpiceImage,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -118,11 +118,10 @@ class _AddProductPageState extends State<AddProductPage> {
     _reviewController.clear();
     _imageBytes = null;
     _base64Image = null;
-    _spiceImageBytes = null;
-    _base64SpiceImage = null;
     _availability = true;
-    _selectedCategory = null;
+    _selectedCategories = [];
     _rating = 0.0;
+    _spiceMeter = 0.0;
   }
 
   @override
@@ -190,43 +189,36 @@ class _AddProductPageState extends State<AddProductPage> {
                             maxLines: 3),
                         const SizedBox(height: 20),
 
-                        // 🔥 Category Dropdown
-                        DropdownButtonFormField<String>(
-                          value: _selectedCategory,
-                          items: _categories
-                              .map((cat) => DropdownMenuItem(
-                            value: cat,
-                            child: Text(cat,
-                                style: const TextStyle(
-                                    color: Colors.white)),
-                          ))
-                              .toList(),
-                          onChanged: (val) {
-                            setState(() {
-                              _selectedCategory = val;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            labelText: "Category",
-                            labelStyle:
-                            const TextStyle(color: Colors.white70),
-                            filled: true,
-                            fillColor: Colors.black.withOpacity(0.3),
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide:
-                              const BorderSide(color: Colors.white24),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Colors.white54, width: 2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          dropdownColor: Colors.black87,
+                        // 🔥 Category Checkboxes
+                        const Text(
+                          "Category",
+                          style: TextStyle(color: Colors.white70, fontSize: 16),
                         ),
+                        const SizedBox(height: 8),
+                        ..._categories.map((cat) {
+                          final isSelected =
+                          _selectedCategories.contains(cat);
+                          return CheckboxListTile(
+                            value: isSelected,
+                            activeColor: Colors.deepOrange,
+                            checkColor: Colors.white,
+                            title: Text(
+                              cat,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            controlAffinity: ListTileControlAffinity.leading,
+                            contentPadding: EdgeInsets.zero,
+                            onChanged: (val) {
+                              setState(() {
+                                if (val == true) {
+                                  _selectedCategories.add(cat);
+                                } else {
+                                  _selectedCategories.remove(cat);
+                                }
+                              });
+                            },
+                          );
+                        }).toList(),
 
                         const SizedBox(height: 20),
 
@@ -256,7 +248,7 @@ class _AddProductPageState extends State<AddProductPage> {
                         ),
                         const SizedBox(height: 20),
 
-                        // rating
+                        // ⭐ Review
                         Padding(
                           padding: const EdgeInsets.all(10),
                           child: Column(
@@ -264,7 +256,8 @@ class _AddProductPageState extends State<AddProductPage> {
                             children: [
                               const Text(
                                 "Review",
-                                style: TextStyle(color: Colors.white, fontSize: 16),
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 16),
                               ),
                               const SizedBox(height: 8),
                               RatingBar.builder(
@@ -275,12 +268,62 @@ class _AddProductPageState extends State<AddProductPage> {
                                 itemCount: 5,
                                 itemSize: 32,
                                 unratedColor: Colors.white24,
-                                itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                itemBuilder: (context, _) =>
-                                const Icon(Icons.star, color: Colors.orangeAccent),
+                                itemBuilder: (context, index) {
+                                  return const Icon(Icons.star,
+                                      color: Colors.orangeAccent);
+                                },
                                 onRatingUpdate: (rating) {
                                   setState(() {
                                     _rating = rating;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // 🌶️ Spice Meter Stars
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Spice Meter",
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 16),
+                              ),
+                              const SizedBox(height: 8),
+                              RatingBar.builder(
+                                initialRating: _spiceMeter,
+                                minRating: 1,
+                                direction: Axis.horizontal,
+                                allowHalfRating: true,
+                                itemCount: 6,
+                                itemSize: 26,
+                                unratedColor: Colors.white24,
+                                itemBuilder: (context, index) {
+                                  // Gradient color from green → yellow → red
+                                  final colors = [
+                                    Colors.green,
+                                    Colors.yellow,
+                                    Colors.red
+                                  ];
+                                  Color color;
+                                  if (index < 2) {
+                                    color = colors[0];
+                                  } else if (index < 4) {
+                                    color = colors[1];
+                                  } else {
+                                    color = colors[2];
+                                  }
+                                  return Icon(Icons.whatshot, color: color);
+                                },
+                                onRatingUpdate: (rating) {
+                                  setState(() {
+                                    _spiceMeter = rating;
                                   });
                                 },
                               ),
@@ -295,14 +338,6 @@ class _AddProductPageState extends State<AddProductPage> {
                           onTap: () => _pickImage(),
                           child: _buildImageBox(
                               _imageBytes, "Tap to select product image"),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // SpiceMeter Image Picker
-                        GestureDetector(
-                          onTap: () => _pickImage(isSpice: true),
-                          child: _buildImageBox(_spiceImageBytes,
-                              "Tap to select spice meter image"),
                         ),
 
                         const SizedBox(height: 20),

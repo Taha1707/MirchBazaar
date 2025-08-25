@@ -16,19 +16,17 @@ class ViewProductPage extends StatefulWidget {
 class _ViewProductPageState extends State<ViewProductPage> {
   String _searchQuery = '';
 
+  // ✅ Asal delete logic
   Future<void> _deleteProduct(String docId, String title) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('products')
-          .doc(docId)
-          .delete();
+      await FirebaseFirestore.instance.collection('products').doc(docId).delete();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('🗑️ "$title" deleted successfully')),
       );
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('❌ Failed to delete "$title"')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Failed to delete "$title"')),
+      );
     }
   }
 
@@ -38,10 +36,8 @@ class _ViewProductPageState extends State<ViewProductPage> {
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.black,
 
-      // 👇 Admin Drawer attach kar diya
       drawer: AdminDrawer(
         onMenuItemSelected: (menu) {
-          // agar chaho to yahan alag alag logic likh sakte ho
           debugPrint("Selected: $menu");
         },
       ),
@@ -58,7 +54,6 @@ class _ViewProductPageState extends State<ViewProductPage> {
             color: Colors.white,
           ),
         ),
-        // 👇 Drawer ko open karne ka icon
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu, color: Colors.white),
@@ -71,7 +66,6 @@ class _ViewProductPageState extends State<ViewProductPage> {
 
       body: Stack(
         children: [
-          // 🌈 Background Gradient
           Container(
             decoration: const BoxDecoration(
               gradient: RadialGradient(
@@ -88,20 +82,16 @@ class _ViewProductPageState extends State<ViewProductPage> {
             ),
           ),
 
-          // 👇 baaki tumhara pura Column same hi rehga
           Column(
             children: [
               const SizedBox(height: kToolbarHeight + 20),
 
               // 🔎 Search + ➕ Add
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Row(
                   children: [
-                    // 🔍 Search Bar
+                    // Search Bar
                     Expanded(
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(14),
@@ -120,22 +110,14 @@ class _ViewProductPageState extends State<ViewProductPage> {
                             child: TextField(
                               style: const TextStyle(color: Colors.white),
                               onChanged: (val) {
-                                setState(
-                                  () => _searchQuery = val.toLowerCase(),
-                                );
+                                setState(() => _searchQuery = val.toLowerCase());
                               },
                               decoration: const InputDecoration(
                                 hintText: "Search Products...",
                                 hintStyle: TextStyle(color: Colors.white70),
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  color: Colors.orangeAccent,
-                                ),
+                                prefixIcon: Icon(Icons.search, color: Colors.orangeAccent),
                                 border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: 14,
-                                  horizontal: 8,
-                                ),
+                                contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 8),
                               ),
                             ),
                           ),
@@ -169,11 +151,7 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                 borderRadius: BorderRadius.circular(14),
                               ),
                             ),
-                            child: const Icon(
-                              Icons.add,
-                              color: Colors.orangeAccent,
-                              size: 22,
-                            ),
+                            child: const Icon(Icons.add, color: Colors.orangeAccent, size: 22),
                           ),
                         ),
                       ),
@@ -197,17 +175,13 @@ class _ViewProductPageState extends State<ViewProductPage> {
                     }
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                       return const Center(
-                        child: Text(
-                          "❗ No products found",
-                          style: TextStyle(color: Colors.white70),
-                        ),
+                        child: Text("❗ No products found", style: TextStyle(color: Colors.white70)),
                       );
                     }
 
                     final products = snapshot.data!.docs.where((doc) {
                       final data = doc.data() as Map<String, dynamic>;
-                      final title =
-                          data['title']?.toString().toLowerCase() ?? '';
+                      final title = data['title']?.toString().toLowerCase() ?? '';
                       return title.contains(_searchQuery);
                     }).toList();
 
@@ -235,14 +209,11 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         // 🖼 Product Image
                                         ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
+                                          borderRadius: BorderRadius.circular(12),
                                           child: Image.memory(
                                             base64Decode(data['image']),
                                             width: 90,
@@ -255,55 +226,37 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                         // Text + Details
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               // Title + Price
                                               Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                 children: [
                                                   Expanded(
                                                     child: Text(
-                                                      data['title'] ??
-                                                          'No Title',
+                                                      data['title'] ?? 'No Title',
                                                       style: const TextStyle(
                                                         fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.bold,
+                                                        fontWeight: FontWeight.bold,
                                                         color: Colors.white,
                                                       ),
                                                     ),
                                                   ),
                                                   Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 8,
-                                                          vertical: 3,
-                                                        ),
+                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                                     decoration: BoxDecoration(
-                                                      gradient:
-                                                          const LinearGradient(
-                                                            colors: [
-                                                              Colors.orange,
-                                                              Colors.red,
-                                                            ],
-                                                          ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            6,
-                                                          ),
+                                                      gradient: const LinearGradient(
+                                                        colors: [Colors.orange, Colors.red],
+                                                      ),
+                                                      borderRadius: BorderRadius.circular(6),
                                                     ),
                                                     child: Text(
-                                                      (data['pricePer250g'] !=
-                                                              null)
+                                                      (data['pricePer250g'] != null)
                                                           ? "Rs. ${data['pricePer250g']} (250g)"
                                                           : "Rs. 0 (250g)",
                                                       style: const TextStyle(
                                                         fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.bold,
+                                                        fontWeight: FontWeight.bold,
                                                         color: Colors.white,
                                                       ),
                                                     ),
@@ -313,153 +266,101 @@ class _ViewProductPageState extends State<ViewProductPage> {
 
                                               const SizedBox(height: 6),
 
-                                              // Category
+                                              // Timestamp
                                               Text(
-                                                data['category'] ??
-                                                    'No Category',
-                                                maxLines: 3,
+                                                (data['timestamp'] != null)
+                                                    ? (data['timestamp'] as Timestamp).toDate().toString().substring(0, 16)
+                                                    : "No Date",
+                                                maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                  color: Colors.white70,
-                                                ),
+                                                style: const TextStyle(fontSize: 11, color: Colors.white70),
                                               ),
 
                                               const SizedBox(height: 10),
 
-                                              // Availability
+                                              // Availability + Buttons
                                               Row(
                                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                 children: [
                                                   Text(
-                                                    (data['availability'] ==
-                                                            true)
-                                                        ? "✅ Available"
-                                                        : "❌ Not Available",
+                                                    (data['availability'] == true) ? "✅ Available" : "❌ Not Available",
                                                     style: TextStyle(
                                                       fontSize: 13,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color:
-                                                          (data['availability'] ==
-                                                              true)
+                                                      fontWeight: FontWeight.w600,
+                                                      color: (data['availability'] == true)
                                                           ? Colors.greenAccent
                                                           : Colors.redAccent,
                                                       shadows: [
                                                         Shadow(
-                                                          color: Colors.black
-                                                              .withOpacity(0.8),
+                                                          color: Colors.black.withOpacity(0.8),
                                                           blurRadius: 4,
                                                         ),
                                                       ],
                                                     ),
                                                   ),
 
-                                                  const SizedBox(width: 12),
-
-                                                  // ✏️ Edit + 🗑 Delete Buttons
                                                   Row(
                                                     children: [
+                                                      // ✏️ Edit Button
                                                       ElevatedButton.icon(
                                                         onPressed: () {
                                                           Navigator.push(
                                                             context,
                                                             MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  EditProductPage(
-                                                                    productId: doc.id,
-                                                                    productData: data,
-                                                                  ),
+                                                              builder: (context) => EditProductPage(
+                                                                productId: doc.id,
+                                                                productData: data,
+                                                              ),
                                                             ),
                                                           );
                                                         },
-                                                        icon: const Icon(
-                                                          Icons.edit,
-                                                          size: 14,
-                                                          color: Colors.greenAccent,
-                                                        ),
+                                                        icon: const Icon(Icons.edit, size: 14, color: Colors.greenAccent),
                                                         label: const Text(
                                                           "Edit",
-                                                          style: TextStyle(
-                                                            fontSize: 11,
-                                                            color: Colors.greenAccent,
-                                                          ),
+                                                          style: TextStyle(fontSize: 11, color: Colors.greenAccent),
                                                         ),
                                                         style: ElevatedButton.styleFrom(
-                                                          backgroundColor: Colors.black
-                                                              .withOpacity(0.7),
+                                                          backgroundColor: Colors.black.withOpacity(0.7),
                                                           elevation: 10,
-                                                          shadowColor: Colors.greenAccent
-                                                              .withOpacity(1),
-                                                          minimumSize: const Size(
-                                                            70,
-                                                            34,
-                                                          ), // chhota button
-                                                          padding:
-                                                          const EdgeInsets.symmetric(
-                                                            horizontal: 10,
-                                                            vertical: 6,
-                                                          ),
+                                                          shadowColor: Colors.greenAccent.withOpacity(1),
+                                                          minimumSize: const Size(70, 34),
+                                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                                           shape: RoundedRectangleBorder(
-                                                            borderRadius:
-                                                            BorderRadius.circular(10),
-                                                            side: const BorderSide(
-                                                              color: Colors.greenAccent,
-                                                              width: 1,
-                                                            ),
+                                                            borderRadius: BorderRadius.circular(10),
+                                                            side: const BorderSide(color: Colors.greenAccent, width: 1),
                                                           ),
                                                         ),
                                                       ),
 
-                                                      SizedBox(width: 8),
+                                                      const SizedBox(width: 8),
 
+                                                      // 🗑 Delete Button
                                                       ElevatedButton.icon(
-                                                        onPressed: () {
-                                                          _deleteProduct(
-                                                            doc.id,
-                                                            data['title'],
-                                                          );
+                                                        onPressed: () async {
+                                                          bool confirm = await DeleteHelper.confirmDelete(context, data['title']);
+                                                          if (confirm) {
+                                                            _deleteProduct(doc.id, data['title']);
+                                                          }
                                                         },
-                                                        icon: const Icon(
-                                                          Icons.delete,
-                                                          size: 14,
-                                                          color: Colors.redAccent,
-                                                        ),
+                                                        icon: const Icon(Icons.delete, size: 14, color: Colors.redAccent),
                                                         label: const Text(
                                                           "Delete",
-                                                          style: TextStyle(
-                                                            fontSize: 11,
-                                                            color: Colors.redAccent,
-                                                          ),
+                                                          style: TextStyle(fontSize: 11, color: Colors.redAccent),
                                                         ),
                                                         style: ElevatedButton.styleFrom(
-                                                          backgroundColor: Colors.black
-                                                              .withOpacity(0.7),
+                                                          backgroundColor: Colors.black.withOpacity(0.7),
                                                           elevation: 10,
-                                                          shadowColor: Colors.redAccent
-                                                              .withOpacity(1),
-                                                          minimumSize: const Size(
-                                                            70,
-                                                            34,
-                                                          ), // chhota button
-                                                          padding:
-                                                          const EdgeInsets.symmetric(
-                                                            horizontal: 10,
-                                                            vertical: 6,
-                                                          ),
+                                                          shadowColor: Colors.redAccent.withOpacity(1),
+                                                          minimumSize: const Size(70, 34),
+                                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                                           shape: RoundedRectangleBorder(
-                                                            borderRadius:
-                                                            BorderRadius.circular(10),
-                                                            side: const BorderSide(
-                                                              color: Colors.redAccent,
-                                                              width: 1,
-                                                            ),
+                                                            borderRadius: BorderRadius.circular(10),
+                                                            side: const BorderSide(color: Colors.redAccent, width: 1),
                                                           ),
                                                         ),
                                                       ),
                                                     ],
                                                   ),
-
                                                 ],
                                               ),
                                             ],
@@ -467,7 +368,6 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                         ),
                                       ],
                                     ),
-
                                   ],
                                 ),
                               ),
@@ -484,5 +384,105 @@ class _ViewProductPageState extends State<ViewProductPage> {
         ],
       ),
     );
+  }
+}
+
+// ✅ DeleteHelper sirf confirm dialog return karega
+class DeleteHelper {
+  static Future<bool> confirmDelete(BuildContext context, String title) async {
+    bool? shouldDelete = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.8,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  )
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [Colors.red, Colors.orange],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ).createShader(bounds),
+                    child: const Icon(Icons.delete_forever, size: 50, color: Colors.white),
+                  ),
+                  const SizedBox(height: 12),
+                  ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [Colors.red, Colors.orange],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ).createShader(bounds),
+                    child: const Text(
+                      "Delete Product",
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white, decoration: TextDecoration.none),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    "Are you sure you want to delete \"$title\"?",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 15, color: Colors.white70, decoration: TextDecoration.none),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text("Cancel", style: TextStyle(color: Colors.white70, decoration: TextDecoration.none)),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Colors.red, Colors.orange, Colors.yellow],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text(
+                            "DELETE",
+                            style: TextStyle(letterSpacing: 2, color: Colors.white, fontWeight: FontWeight.bold, decoration: TextDecoration.none),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    return shouldDelete ?? false;
   }
 }
