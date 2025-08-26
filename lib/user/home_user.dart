@@ -76,8 +76,10 @@ class _HomePageState extends State<HomePage>
             child: StreamBuilder(
               stream: FirebaseFirestore.instance
                   .collection("products")
+                  .where("category", arrayContains: english)
                   .snapshots(),
-              builder: (context, snapshot) {
+
+                builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -385,13 +387,17 @@ class _HomePageState extends State<HomePage>
 
                 // 🔹 Categories + Products
 
-                _buildCategory("Mild Spice", "ہلکی مرچ مصالحہ"),
+                _buildCategory("Daily Cooking Masalas", "روزانہ کے مصالحے"),
                 const SizedBox(height: 20),
                 const PromoBanner(),
                 const SizedBox(height: 20),
-                _buildCategory("Medium Spice", "درمیانی مرچ مصالحہ"),
+                _buildCategory("Rice & Biryani Specials", "بریانی مصالحے"),
                 const SizedBox(height: 10),
-                _buildCategory("Hot Spice", "تیز مرچ مصالحہ"),
+                _buildCategory("Karahi & Curry Lovers", "کڑاہی و سالن مصالحے"),
+                const SizedBox(height: 10),
+                _buildCategory("BBQ & Grilled Specials", "باربی کیو مصالحے"),
+                const SizedBox(height: 10),
+                _buildCategory("Snacks & Street Food", "سنیک و اسٹریٹ فوڈ"),
 
               ],
             ),
