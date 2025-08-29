@@ -207,7 +207,70 @@ class _UserProductPageState extends State<UserProductPage>
 
                         return GestureDetector(
                           onTap: () {
-                            // Example: Firestore se document fetch karke detail page par bhejna
+                            final bool isAvailable = data['availability'] == true;
+
+                            if (!isAvailable) {
+                              // Agar product out of stock hai to sirf snackbar dikhayege
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  behavior: SnackBarBehavior.floating,
+                                  backgroundColor: Colors.transparent, // hide default bg
+                                  elevation: 0,
+                                  duration: const Duration(seconds: 2),
+                                  content: ClipRRect(
+                                    borderRadius: BorderRadius.circular(15),
+                                    child: BackdropFilter(
+                                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12), // glass blur
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.6), // blacky glass effect
+                                          borderRadius: BorderRadius.circular(15),
+                                          border: const Border(
+                                            top: BorderSide(
+                                              width: 2,
+                                              style: BorderStyle.solid,
+                                              color: Colors.red, // placeholder (overridden below)
+                                            ),
+                                            bottom: BorderSide(
+                                              width: 2,
+                                              style: BorderStyle.solid,
+                                              color: Colors.red, // placeholder (overridden below)
+                                            ),
+                                            right: BorderSide(
+                                              width: 2,
+                                              style: BorderStyle.solid,
+                                              color: Colors.red, // placeholder (overridden below)
+                                            ),
+                                            left: BorderSide(
+                                              width: 2,
+                                              style: BorderStyle.solid,
+                                              color: Colors.red, // placeholder (overridden below)
+                                            ),
+                                          ),
+                                        ),
+                                        child: Stack(
+                                          children: [
+                                            // Text Content
+                                            const Padding(
+                                              padding: EdgeInsets.all(14),
+                                              child: Center(
+                                                child: Text(
+                                                  "PRODUCT STATUS IS OUT OF STOCK",
+                                                  style: TextStyle(color: Colors.white, fontSize: 16, letterSpacing: 4),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+
+
+                            } else {
+                              // Agar available hai to details page khulega
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -220,13 +283,15 @@ class _UserProductPageState extends State<UserProductPage>
                                       "category": data['category'],
                                       "availability": data['availability'],
                                       "review": data['review'],
-                                      "spiceMeterImage": data['spiceMeterImage'],
+                                      "spiceMeter": data['spiceMeter'],
                                       "timestamp": data['timestamp']?.toString(),
                                     },
                                   ),
                                 ),
                               );
+                            }
                           },
+
                           child: Material(
                             elevation: 6, // yahan elevation control kar
                             borderRadius: BorderRadius.circular(16),

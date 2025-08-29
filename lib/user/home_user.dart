@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:project/user/product_page.dart';
 import 'package:project/user/user_drawer.dart'; // 👈 custom drawer import
 import '../logout_page.dart';
 
@@ -301,7 +302,9 @@ class _HomePageState extends State<HomePage>
                           ),
                         ),
                         const SizedBox(height: 15),
-                        _buildGradientButton(text: "Shop Now", onTap: () {}),
+                        _buildGradientButton(text: "Shop Now", onTap: () {
+                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => UserProductPage()));
+                        }),
                       ],
                     ),
                   ),
