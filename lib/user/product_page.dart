@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:ui';
+import 'package:badges/badges.dart' as badges;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -74,13 +75,13 @@ class _UserProductPageState extends State<UserProductPage>
 
           Column(
             children: [
-              const SizedBox(height: 10),
+              const SizedBox(height: 14),
 
               const Text(
-                'Products',
+                '🛍 Products',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -139,20 +140,20 @@ class _UserProductPageState extends State<UserProductPage>
                       ),
                     ),
                     const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.add_shopping_cart,
-                        color: Colors.white,
-                      ),
-                      onPressed: () {},
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.favorite_border,
-                        color: Colors.white,
-                      ),
-                      onPressed: () {},
-                    ),
+                    // cart button
+                    buildCartButton(context),
+
+                    // fav button
+
+                    // IconButton(
+                    //   icon: const Icon(
+                    //     Icons.favorite_border,
+                    //     color: Colors.white,
+                    //   ),
+                    //   onPressed: () {},
+                    // ),
+
+                    // filter button
                     IconButton(
                       icon: const Icon(Icons.filter_list, color: Colors.white),
                       onPressed: () {},
@@ -256,7 +257,7 @@ class _UserProductPageState extends State<UserProductPage>
                                               child: Center(
                                                 child: Text(
                                                   "PRODUCT STATUS IS OUT OF STOCK",
-                                                  style: TextStyle(color: Colors.white, fontSize: 16, letterSpacing: 4),
+                                                  style: TextStyle(color: Colors.white, fontSize: 14, letterSpacing: 1),
                                                 ),
                                               ),
                                             ),
@@ -293,140 +294,141 @@ class _UserProductPageState extends State<UserProductPage>
                           },
 
                           child: Material(
-                            elevation: 6, // yahan elevation control kar
+                            elevation: 6,
                             borderRadius: BorderRadius.circular(16),
-                            color: Colors.white.withOpacity(0.12),
+                            // 🔹 Out of stock ko dull / faded banane ke liye opacity
+                            color: data['availability'] == true
+                                ? Colors.white.withOpacity(0.12)
+                                : Colors.white.withOpacity(0.05),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(16),
                               child: BackdropFilter(
-                                filter: ImageFilter.blur(
-                                  sigmaX: 12,
-                                  sigmaY: 12,
-                                ),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.12),
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // 🔹 Product Image
-                                      Expanded(
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              const BorderRadius.vertical(
+                                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                                child: ColorFiltered(
+                                  colorFilter: data['availability'] == true
+                                      ? const ColorFilter.mode(
+                                      Colors.transparent, BlendMode.multiply)
+                                      : const ColorFilter.mode(
+                                      Colors.black12, BlendMode.saturation), // 🔹 greyscale for out of stock
+                                  child: Opacity(
+                                    opacity: data['availability'] == true ? 1.0 : 0.5, // 🔹 dull effect
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: Colors.white.withOpacity(0.12),
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          // 🔹 Product Image
+                                          Expanded(
+                                            child: ClipRRect(
+                                              borderRadius: const BorderRadius.vertical(
                                                 top: Radius.circular(16),
                                               ),
-                                          child: Image.memory(
-                                            base64Decode(data['image']),
-                                            width: double.infinity,
-                                            height: 200,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-
-                                      // 🔹 Product Details
-                                      Padding(
-                                        padding: const EdgeInsets.all(10),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              data['title'] ?? 'No Title',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
+                                              child: Image.memory(
+                                                base64Decode(data['image']),
+                                                width: double.infinity,
+                                                height: 200,
+                                                fit: BoxFit.cover,
                                               ),
-                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            const SizedBox(height: 10),
+                                          ),
 
-                                            // Price Row
-                                            Row(
+                                          // 🔹 Product Details
+                                          Padding(
+                                            padding: const EdgeInsets.all(10),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 4,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.orange,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          8,
-                                                        ),
-                                                  ),
-                                                  child: Text(
-                                                    "Rs. ${data['pricePer250g'] ?? '0'}",
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 6),
-                                                const Text(
-                                                  "(250g)",
-                                                  style: TextStyle(
-                                                    color: Colors.white54,
-                                                    fontSize: 10,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 10),
-
-                                            // 🔹 Availability Badge
-                                            Row(
-                                              children: [
-                                                Icon(
-                                                  data['availability'] == true
-                                                      ? Icons.check_circle
-                                                      : Icons.cancel,
-                                                  size: 14,
-                                                  color:
-                                                      data['availability'] ==
-                                                          true
-                                                      ? Colors.greenAccent
-                                                      : Colors.redAccent,
-                                                ),
-                                                const SizedBox(width: 4),
                                                 Text(
-                                                  data['availability'] == true
-                                                      ? "Available"
-                                                      : "Out of Stock",
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.w500,
-                                                    color:
-                                                        data['availability'] ==
-                                                            true
-                                                        ? Colors.greenAccent
-                                                        : Colors.redAccent,
+                                                  data['title'] ?? 'No Title',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.bold,
                                                   ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                                const SizedBox(height: 10),
+
+                                                // Price Row
+                                                Row(
+                                                  children: [
+                                                    Container(
+                                                      padding: const EdgeInsets.symmetric(
+                                                        horizontal: 7,
+                                                        vertical: 3,
+                                                      ),
+                                                      decoration: BoxDecoration(
+                                                        gradient: const LinearGradient(
+                                                          colors: [Colors.orange, Colors.red],
+                                                        ),
+                                                        borderRadius: BorderRadius.circular(6),
+                                                      ),
+                                                      child: Text(
+                                                        "Rs. ${data['pricePer250g'] ?? '0'}",
+                                                        style: const TextStyle(
+                                                          fontSize: 10,
+                                                          fontWeight: FontWeight.bold,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 6),
+                                                    const Text(
+                                                      "(250g)",
+                                                      style: TextStyle(
+                                                        color: Colors.white54,
+                                                        fontSize: 8,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 10),
+
+                                                // 🔹 Availability Badge
+                                                Row(
+                                                  children: [
+                                                    Icon(
+                                                      data['availability'] == true
+                                                          ? Icons.check_circle
+                                                          : Icons.cancel,
+                                                      size: 14,
+                                                      color: data['availability'] == true
+                                                          ? Colors.greenAccent
+                                                          : Colors.redAccent,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      data['availability'] == true
+                                                          ? "Available"
+                                                          : "Out of Stock",
+                                                      style: TextStyle(
+                                                        fontSize: 11,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: data['availability'] == true
+                                                            ? Colors.greenAccent
+                                                            : Colors.redAccent,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ],
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
+
                         );
                       },
                     );
@@ -453,4 +455,49 @@ class _UserProductPageState extends State<UserProductPage>
       ),
     );
   }
+
+
+  IconButton buildCartButton(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    return IconButton(
+      onPressed: () {
+        // Cart Page par navigate
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CartPage()),
+        );
+      },
+      icon: StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection('carts')
+            .doc(user?.uid ?? "guest")
+            .collection('items')
+            .snapshots(),
+        builder: (context, snapshot) {
+          int itemCount = 0;
+          if (snapshot.hasData) {
+            itemCount = snapshot.data!.docs.length;
+          }
+
+          return badges.Badge(
+            position: badges.BadgePosition.topEnd(top: -10, end: -10),
+            showBadge: itemCount > 0,
+            badgeContent: Text(
+              itemCount.toString(),
+              style: const TextStyle(color: Colors.white, fontSize: 10),
+            ),
+            badgeStyle: badges.BadgeStyle(
+              badgeColor: Colors.deepOrange,
+            ),
+            child: const Icon(
+              Icons.add_shopping_cart,
+              color: Colors.white,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
 }

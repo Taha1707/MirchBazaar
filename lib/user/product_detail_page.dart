@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ProductDetailPage extends StatefulWidget {
@@ -76,10 +79,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               decoration: BoxDecoration(
                 color: Colors.black.withOpacity(0.5), // glassy black bg
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  width: 1.5,
-                  color: Colors.white24,
-                ),
+                border: Border.all(width: 1.5, color: Colors.white24),
               ),
               child: IconButton(
                 icon: const Icon(
@@ -93,36 +93,32 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             flexibleSpace: FlexibleSpaceBar(
               background: decodeImage(product['image']) != null
                   ? ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-                child: Image.memory(
-                  decodeImage(product['image'])!,
-                  fit: BoxFit.cover,
-                ),
-              )
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(30),
+                        bottomRight: Radius.circular(30),
+                      ),
+                      child: Image.memory(
+                        decodeImage(product['image'])!,
+                        fit: BoxFit.cover,
+                      ),
+                    )
                   : Container(
-                color: Colors.grey[900],
-                child: const Center(
-                  child: Icon(Icons.image, size: 100, color: Colors.grey),
-                ),
-              ),
+                      color: Colors.grey[900],
+                      child: const Center(
+                        child: Icon(Icons.image, size: 100, color: Colors.grey),
+                      ),
+                    ),
             ),
           ),
-
 
           // 🔥 Detail Container
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-              ),
+              decoration: BoxDecoration(color: Colors.grey[900]),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Center(
                     child: Container(
                       height: 5,
@@ -134,7 +130,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                   ),
 
-                  SizedBox(height: 20,),
+                  SizedBox(height: 20),
 
                   // 🔥 Title & Price
                   Row(
@@ -220,8 +216,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               decoration: BoxDecoration(
                                 gradient: isSelected
                                     ? const LinearGradient(
-                                  colors: [Colors.orange, Colors.red],
-                                )
+                                        colors: [Colors.orange, Colors.red],
+                                      )
                                     : null,
                                 color: isSelected ? null : Colors.grey[800],
                                 borderRadius: BorderRadius.circular(10),
@@ -252,8 +248,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.remove,
-                                  color: Colors.white, size: 16),
+                              icon: const Icon(
+                                Icons.remove,
+                                color: Colors.white,
+                                size: 16,
+                              ),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
                               onPressed: () {
@@ -273,8 +272,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             ),
                             const SizedBox(width: 8),
                             IconButton(
-                              icon: const Icon(Icons.add,
-                                  color: Colors.white, size: 16),
+                              icon: const Icon(
+                                Icons.add,
+                                color: Colors.white,
+                                size: 16,
+                              ),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
                               onPressed: () {
@@ -360,7 +362,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                       Row(
                         children: List.generate(6, (index) {
-                          final int spiceValue = _spiceMeter.round().clamp(0, 6);
+                          final int spiceValue = _spiceMeter.round().clamp(
+                            0,
+                            6,
+                          );
 
                           // Color logic
                           final Color bandColor = (index < 2)
@@ -368,7 +373,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               : (index < 4 ? Colors.yellow : Colors.red);
 
                           final bool filled = index < spiceValue;
-                          final Color iconColor = filled ? bandColor : Colors.white24;
+                          final Color iconColor = filled
+                              ? bandColor
+                              : Colors.white24;
 
                           return Padding(
                             padding: const EdgeInsets.only(right: 3),
@@ -380,7 +387,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           );
                         }),
                       ),
-
                     ],
                   ),
 
@@ -402,7 +408,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       Row(
                         children: List.generate(5, (index) {
                           final num raw =
-                          (product['review'] ?? product['rating'] ?? 0);
+                              (product['review'] ?? product['rating'] ?? 0);
                           final double rating = raw.toDouble();
                           return Padding(
                             padding: const EdgeInsets.only(right: 3),
@@ -426,26 +432,281 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     width: double.infinity,
                     child: isSaving
                         ? const Center(
-                      child: SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.deepOrange,
-                          ),
-                        ),
-                      ),
-                    )
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 3,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.deepOrange,
+                                ),
+                              ),
+                            ),
+                          )
                         : _buildGradientButton(
-                      text: "ADD TO CART",
-                      onTap: () {
-                        // TODO: add-to-cart logic
-                      },
-                    ),
+                            text: "ADD TO CART",
+                            onTap: () {
+                              addToCart();
+                            },
+                          ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 40),
+
+                  // 🛡️ Key Points Section
+                  Container(
+                margin: const EdgeInsets.only(top: 20),
+                padding: const EdgeInsets.all(2), // border ke liye
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: const LinearGradient(
+                    colors: [
+                      Colors.orange,
+                      Colors.red,
+                      Colors.yellow,
+                      Colors.deepOrange,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.35), // glassmorphism overlay
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: const [
+                          _FeatureItem(
+                            icon: Icons.local_shipping,
+                            text: "Delivery",
+                            color: Colors.lime,
+                          ),
+                          _FeatureItem(
+                            icon: Icons.spa,
+                            text: "Natural",
+                            color: Colors.greenAccent,
+                          ),
+                          _FeatureItem(
+                            icon: Icons.verified,
+                            text: "Quality",
+                            color: Colors.lightBlueAccent,
+                          ),
+                          _FeatureItem(
+                            icon: Icons.star_rounded,
+                            text: "Loved",
+                            color: Colors.amber,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+                  const SizedBox(height: 30),
+
+                  // 🛍 More Products Section
+                  const Text(
+                    "More Products",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  // random 4 products
+                  StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('products')
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      // 🔹 Firestore data list
+                      final docs = snapshot.data!.docs;
+
+                      // 🔹 Availability = true filter
+                      final availableProducts = docs
+                          .where(
+                            (doc) =>
+                                (doc.data()
+                                    as Map<String, dynamic>)['availability'] ==
+                                true,
+                          )
+                          .toList();
+
+                      if (availableProducts.isEmpty) {
+                        return const Text(
+                          "No available products",
+                          style: TextStyle(color: Colors.white70),
+                        );
+                      }
+
+                      // 🔹 Random shuffle and pick 4
+                      availableProducts.shuffle();
+                      final randomProducts = availableProducts.take(4).toList();
+
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: randomProducts.length,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 15,
+                          mainAxisSpacing: 15,
+                          childAspectRatio: 0.9,
+                        ),
+                        itemBuilder: (context, index) {
+                          final data = randomProducts[index].data() as Map<String, dynamic>;
+
+                          return Material(
+                            elevation: 6,
+                            borderRadius: BorderRadius.circular(16),
+                            color: Colors.white.withOpacity(0.12),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ProductDetailPage(
+                                      product: {
+                                        "title": data['title'],
+                                        "description": data['description'],
+                                        "pricePer250g": data['pricePer250g'],
+                                        "image": data['image'],
+                                        "category": data['category'],
+                                        "availability": data['availability'],
+                                        "review": data['review'],
+                                        "spiceMeter": data['spiceMeter'],
+                                        "timestamp": data['timestamp']?.toString(),
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(
+                                    sigmaX: 12,
+                                    sigmaY: 12,
+                                  ),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        width: 1.5,
+                                        color: Colors.white.withOpacity(0.3),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // 🔹 Product Image
+                                        Expanded(
+                                          child: ClipRRect(
+                                            borderRadius: const BorderRadius.vertical(
+                                              top: Radius.circular(16),
+                                            ),
+                                            child: Image.memory(
+                                              base64Decode(data['image']),
+                                              width: double.infinity,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        ),
+
+                                        // 🔹 Product Details
+                                        Padding(
+                                          padding: const EdgeInsets.all(10),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                data['title'] ?? 'No Title',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              const SizedBox(height: 8),
+
+                                              // Price Row
+                                              Row(
+                                                children: [
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(
+                                                      horizontal: 7,
+                                                      vertical: 3,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      gradient: const LinearGradient(
+                                                        colors: [Colors.orange, Colors.red],
+                                                      ),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: Text(
+                                                      "Rs. ${data['pricePer250g'] ?? '0'}",
+                                                      style: const TextStyle(
+                                                        fontSize: 10,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 6),
+                                                  const Text(
+                                                    "(250g)",
+                                                    style: TextStyle(
+                                                      color: Colors.white54,
+                                                      fontSize: 8,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+
+                    },
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // ✨ Ending Line
+                  const Center(
+                    child: Text(
+                      "🌶️ Bringing Authentic Spices to Your Kitchen — Pure, Fresh & Full of Flavor!",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -483,6 +744,100 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           ),
         ),
       ),
+    );
+  }
+
+
+  Future<void> addToCart() async {
+    setState(() {
+      isSaving = true;
+    });
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please login to add items to cart")),
+        );
+        return;
+      }
+
+      final productId = widget.product['id'] ?? DateTime.now().millisecondsSinceEpoch.toString();
+
+      final cartRef = FirebaseFirestore.instance
+          .collection('carts') // ✅ ye rules ke hisaab se match karega
+          .doc(user.uid)       // ✅ yahan apna user id lagega
+          .collection('items')
+          .doc(productId + "_" + selectedWeight);
+
+      final unitPrice = getPrice();
+      final doc = await cartRef.get();
+
+      if (doc.exists) {
+        final currentQty = doc['quantity'] ?? 1;
+        await cartRef.update({
+          'quantity': currentQty + quantity,
+          'totalPrice': (currentQty + quantity) * unitPrice,
+        });
+      } else {
+        await cartRef.set({
+          'productId': productId,
+          'title': widget.product['title'],
+          'selectedWeight': selectedWeight,
+          'unitPrice': unitPrice,
+          'quantity': quantity,
+          'totalPrice': unitPrice * quantity,
+          'image': widget.product['image'],
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("✅ '${widget.product['title']}' Added to Cart"),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    } finally {
+      setState(() {
+        isSaving = false;
+      });
+    }
+  }
+
+
+}
+
+// ye helper widget bhi same file me bana lena
+class _FeatureItem extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color color;
+
+  const _FeatureItem({
+    required this.icon,
+    required this.text,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 30),
+        const SizedBox(height: 6),
+        Text(
+          text,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

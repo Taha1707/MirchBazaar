@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:project/services/validation.dart';
+import 'package:project/user/product_page.dart';
+
+import 'checkout.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -12,407 +15,337 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
-  final user = FirebaseAuth.instance.currentUser;
-  final userId = FirebaseAuth.instance.currentUser!.uid;
+  final user = FirebaseAuth.instance.currentUser!;
 
   Future<void> _removeItem(String docId, String title) async {
     await FirebaseFirestore.instance
         .collection('carts')
-        .doc(user!.uid)
+        .doc(user.uid)
         .collection('items')
         .doc(docId)
         .delete();
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text('🗑️ Removed "$title" from cart')));
+    ).showSnackBar(SnackBar(content: Text('🗑️ "$title" removed from cart')));
   }
 
-  Future<void> _updateQuantity(String docId, int newQuantity) async {
+  Future<void> _updateQuantity(
+      String docId,
+      int newQuantity,
+      dynamic unitPrice,
+      ) async {
     if (newQuantity > 0) {
+      double price = 0;
+      if (unitPrice is int) {
+        price = unitPrice.toDouble();
+      } else if (unitPrice is double) {
+        price = unitPrice;
+      } else {
+        price = double.tryParse(unitPrice.toString()) ?? 0;
+      }
+
       await FirebaseFirestore.instance
           .collection('carts')
-          .doc(user!.uid)
+          .doc(user.uid)
           .collection('items')
           .doc(docId)
-          .update({'quantity': newQuantity});
+          .update({
+        'quantity': newQuantity,
+        'totalPrice': price * newQuantity,
+      });
     }
-  }
-
-  void showCheckoutDialog(
-    BuildContext context,
-    List<Map<String, dynamic>> cartItems,
-    String userId,
-  ) {
-    final _formKey = GlobalKey<FormState>();
-    final TextEditingController addressController = TextEditingController();
-    final TextEditingController phoneController = TextEditingController();
-    String selectedPayment = 'Cash on Delivery';
-
-    // Total Price Calculate
-    double totalPrice = cartItems.fold(0, (sum, item) {
-      return sum + (item['price'] ?? 0) * (item['quantity'] ?? 1);
-    });
-
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          contentPadding: EdgeInsets.zero, // width control ke liye padding kam
-          titlePadding: EdgeInsets.only(top: 16, left: 16, right: 16),
-          title: Center(
-            child: Text(
-              'Checkout',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 22,
-                color: Colors.deepPurple,
-              ),
-            ),
-          ),
-          content: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: 399), // width fix
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Divider(),
-                    ...cartItems.map(
-                      (item) => ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          "${item['name']}",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        subtitle: Text("Quantity ${item['quantity']}"),
-                        trailing: Text(
-                          "Rs ${(item['price'] * item['quantity']).toStringAsFixed(2)}",
-                        ),
-                      ),
-                    ),
-                    Divider(),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Text(
-                        "Total Price: Rs ${totalPrice.toStringAsFixed(2)}",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextFormField(
-                      controller: addressController,
-                      decoration: InputDecoration(
-                        labelText: 'Delivery Address',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        prefixIcon: Icon(Icons.home, color: Colors.deepPurple),
-                      ),
-                      validator: validateAddress,
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    TextFormField(
-                      controller: phoneController,
-                      decoration: InputDecoration(
-                        labelText: 'Phone Number',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        prefixIcon: Icon(Icons.phone, color: Colors.deepPurple),
-                      ),
-                      keyboardType: TextInputType.phone,
-                      validator: validatePhoneNumber,
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    DropdownButtonFormField<String>(
-                      value: selectedPayment,
-                      items: ['Cash on Delivery', 'Easypaisa', 'JazzCash']
-                          .map(
-                            (method) => DropdownMenuItem(
-                              value: method,
-                              child: Text(method),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        selectedPayment = value!;
-                      },
-                      decoration: InputDecoration(
-                        labelText: 'Payment Method',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        prefixIcon: Icon(
-                          Icons.payment,
-                          color: Colors.deepPurple,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          actionsPadding: EdgeInsets.only(bottom: 20, right: 24),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text('Cancel', style: TextStyle(color: Colors.grey[700])),
-            ),
-
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  // Loading dialog show
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (_) => Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.deepPurple,
-                      ),
-                    ),
-                  );
-
-                  try {
-                    await Future.delayed(
-                      Duration(seconds: 2),
-                    );
-
-                    await FirebaseFirestore.instance.collection('orders').add({
-                      'items': cartItems ?? [],
-                      'totalPrice': totalPrice ?? 0,
-                      'address': addressController.text.trim(),
-                      'phone': phoneController.text.trim(),
-                      'paymentMethod': selectedPayment ?? 'Cash',
-                      'status': 'pending',
-                      'timestamp': FieldValue.serverTimestamp(),
-                      'userId': userId ?? '',
-                    });
-
-                    final cartSnapshot = await FirebaseFirestore.instance
-                        .collection('carts')
-                        .doc(userId)
-                        .collection('items')
-                        .get();
-
-                    for (var doc in cartSnapshot.docs) {
-                      await doc.reference.delete();
-                    }
-
-                    Navigator.pop(context); // Close loading
-                    Navigator.pop(dialogContext); // Close checkout dialog
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Order placed successfully!'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  } catch (e) {
-                    Navigator.pop(context); // Close loading
-                    print("🔥 Firestore error: $e");
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('Order failed: $e')));
-                  }
-                }
-              },
-
-              child: Text('Confirm', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        centerTitle: true,
         title: const Text(
-          'My Cart',
+          "🛒  My Cart",
           style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
             color: Colors.white,
           ),
         ),
-        centerTitle: true,
-        backgroundColor: Colors.deepPurple,
-        elevation: 3,
-        iconTheme: const IconThemeData(color: Colors.white),
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(width: 1.5, color: Colors.white24),
+          ),
+          child: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.white,
+              size: 18,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
       ),
-      backgroundColor: Colors.grey[100],
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('carts')
-            .doc(user!.uid)
+            .doc(user.uid)
             .collection('items')
-            .orderBy('timestamp', descending: true)
+            .orderBy('createdAt', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Colors.deepPurple),
+              child: CircularProgressIndicator(color: Colors.orange),
             );
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return const Center(
               child: Text(
                 '🛒 Your cart is empty!',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(color: Colors.white70, fontSize: 16),
               ),
             );
           }
 
           final items = snapshot.data!.docs;
-
-          // ✅ Ye banaya list jo checkout dialog me pass hoga
-          List<Map<String, dynamic>> cartItemsList = items.map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            return {
-              'name': data['title'],
-              'quantity': data['quantity'],
-              'price': data['price'],
-            };
-          }).toList();
-
-          double totalPrice = 0;
-          for (var item in items) {
-            totalPrice += (item['price'] as num) * (item['quantity'] as num);
-          }
+          double totalPrice = items.fold(
+            0,
+                (sum, doc) => sum + (doc['totalPrice'] as num),
+          );
 
           return Column(
             children: [
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(16),
                   itemCount: items.length,
                   itemBuilder: (context, index) {
                     final doc = items[index];
                     final data = doc.data() as Map<String, dynamic>;
 
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      elevation: 3,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.memory(
-                                base64Decode(data['image']),
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.cover,
+                    return Dismissible(
+                      key: Key(doc.id),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.transparent, // transparent background
+                        ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Colors.orange, Colors.red, Colors.yellow],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: const EdgeInsets.all(2), // 👈 thickness of gradient border
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12), // glass effect
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.1), // translucent bg
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Icons.delete,
+                                  size: 28,
+                                  color: Colors.white70, // overridden by gradient
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
+                          ),
+                        ),
+                      ),
+
+                      onDismissed: (_) => _removeItem(doc.id, data['title']),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.orange.withOpacity(0.4),
+                              Colors.red.withOpacity(0.4),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.4),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                            child: Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.35),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  width: 1.2,
+                                  color: Colors.white.withOpacity(0.2),
+                                ),
+                              ),
+                              child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    data['title'],
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.memory(
+                                      base64Decode(data['image']),
+                                      width: 90,
+                                      height: 90,
+                                      fit: BoxFit.cover,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Rs. ${data['price']}',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.deepPurple,
+                                  const SizedBox(width: 14),
+
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              data['title'],
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 4,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                gradient: const LinearGradient(
+                                                  colors: [
+                                                    Colors.orange,
+                                                    Colors.red,
+                                                  ],
+                                                ),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: Text(
+                                                "Rs. ${data['unitPrice']}",
+                                                style: const TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+
+                                        Text(
+                                          "Weight: ${data['selectedWeight']}",
+                                          style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 10),
+
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 7,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(10),
+                                            border: Border.all(
+                                              color: Colors.white70,
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(Icons.remove, color: Colors.white70, size: 15),
+                                                padding: EdgeInsets.zero,
+                                                constraints: const BoxConstraints(),
+                                                onPressed: () {
+                                                  final currentQty = data['quantity'] as int; // snapshot value
+                                                  double unitPrice = 0;
+                                                  if (data['unitPrice'] is int) {
+                                                    unitPrice = (data['unitPrice'] as int).toDouble();
+                                                  } else if (data['unitPrice'] is double) {
+                                                    unitPrice = data['unitPrice'] as double;
+                                                  } else {
+                                                    unitPrice = double.tryParse(data['unitPrice'].toString()) ?? 0;
+                                                  }
+
+                                                  if (currentQty > 1) {
+                                                    _updateQuantity(doc.id, currentQty - 1, unitPrice);
+                                                  }
+                                                },
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                '${data['quantity']}',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white70,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              IconButton(
+                                                icon: const Icon(Icons.add, color: Colors.white70, size: 15),
+                                                padding: EdgeInsets.zero,
+                                                constraints: const BoxConstraints(),
+                                                onPressed: () {
+                                                  final currentQty = data['quantity'] as int; // snapshot value
+                                                  double unitPrice = 0;
+                                                  if (data['unitPrice'] is int) {
+                                                    unitPrice = (data['unitPrice'] as int).toDouble();
+                                                  } else if (data['unitPrice'] is double) {
+                                                    unitPrice = data['unitPrice'] as double;
+                                                  } else {
+                                                    unitPrice = double.tryParse(data['unitPrice'].toString()) ?? 0;
+                                                  }
+
+                                                  _updateQuantity(doc.id, currentQty + 1, unitPrice);
+                                                },
+                                              ),
+
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.remove_circle,
-                                          color: Colors.redAccent,
-                                        ),
-                                        onPressed: () {
-                                          if (data['quantity'] > 1) {
-                                            _updateQuantity(
-                                              doc.id,
-                                              data['quantity'] - 1,
-                                            );
-                                          }
-                                        },
-                                      ),
-                                      Text(
-                                        '${data['quantity']}',
-                                        style: const TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.add_circle,
-                                          color: Colors.green,
-                                        ),
-                                        onPressed: () {
-                                          _updateQuantity(
-                                            doc.id,
-                                            data['quantity'] + 1,
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
+
                                 ],
                               ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () {
-                                _removeItem(doc.id, data['title']);
-                              },
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     );
@@ -420,41 +353,66 @@ class _CartPageState extends State<CartPage> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: Colors.black, width: 1),
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.orange.withOpacity(0.7),
+                      Colors.red.withOpacity(0.7),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  color: Colors.deepPurple.shade50,
-                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Total: Rs. ${totalPrice.toStringAsFixed(0)}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Total",
+                          style: TextStyle(color: Colors.white70, fontSize: 14),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Rs ${totalPrice.toStringAsFixed(0)}",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 20,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
+                        backgroundColor: Colors.black.withOpacity(0.6),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
+                          horizontal: 22,
+                          vertical: 16,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       onPressed: () {
-                        showCheckoutDialog(context, cartItemsList, userId);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => CheckoutPage()),
+                        );
                       },
                       child: const Text(
-                        'Proceed',
-                        style: TextStyle(color: Colors.white),
+                        "Proceed",
+                        style: TextStyle(
+                          color: Colors.white,
+                          letterSpacing: 2,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -467,3 +425,7 @@ class _CartPageState extends State<CartPage> {
     );
   }
 }
+
+
+
+
