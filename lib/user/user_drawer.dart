@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project/user/home_user.dart';
 import 'package:project/user/product_page.dart';
+import 'package:project/user/about_us.dart';
 import '../logout_page.dart';
 import '../admin/view_product_page.dart'; // example route for navigation
 
@@ -37,6 +38,7 @@ class UserDrawer extends StatelessWidget {
             _menuItem(context, Icons.receipt_long, "My Orders"),
             _menuItem(context, Icons.local_offer, "Offers"),
             _menuItem(context, Icons.contact_support, "Support"),
+            _menuItem(context, Icons.question_mark_sharp, "About", route: AboutUsPage()),
             _menuItem(context, Icons.settings, "Settings"),
             _menuItem(context, Icons.logout, "Logout", isLogout: true),
           ],
