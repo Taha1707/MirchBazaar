@@ -36,7 +36,6 @@ class UserDrawer extends StatelessWidget {
             _menuItem(context, Icons.shopping_bag, "Shop", route: UserProductPage()), // example route
             _menuItem(context, Icons.favorite, "Wishlist"),
             _menuItem(context, Icons.receipt_long, "My Orders"),
-            _menuItem(context, Icons.local_offer, "Offers"),
             _menuItem(context, Icons.contact_support, "Support"),
             _menuItem(context, Icons.question_mark_sharp, "About", route: AboutUsPage()),
             _menuItem(context, Icons.settings, "Settings"),
