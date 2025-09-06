@@ -4,6 +4,9 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import 'cart_page.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -454,75 +457,40 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   const SizedBox(height: 40),
 
                   // 🛡️ Key Points Section
-                  Container(
-                margin: const EdgeInsets.only(top: 20),
-                padding: const EdgeInsets.all(2), // border ke liye
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  gradient: const LinearGradient(
-                    colors: [
-                      Colors.orange,
-                      Colors.red,
-                      Colors.yellow,
-                      Colors.deepOrange,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.35), // glassmorphism overlay
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: const [
-                          _FeatureItem(
-                            icon: Icons.local_shipping,
-                            text: "Delivery",
-                            color: Colors.lime,
-                          ),
-                          _FeatureItem(
-                            icon: Icons.spa,
-                            text: "Natural",
-                            color: Colors.greenAccent,
-                          ),
-                          _FeatureItem(
-                            icon: Icons.verified,
-                            text: "Quality",
-                            color: Colors.lightBlueAccent,
-                          ),
-                          _FeatureItem(
-                            icon: Icons.star_rounded,
-                            text: "Loved",
-                            color: Colors.amber,
-                          ),
-                        ],
-                      ),
+                  _sectionHeading("What We Offer"),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center, // 👈 center align
+                          children: [
+                            _statCard("🚚", "Fast", "Delivery"),
+                            const SizedBox(width: 20),
+                            _statCard("🌱", "100%", "Natural"),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center, // 👈 center align
+                          children: [
+                            _statCard("💎", "Top", "Quality"),
+                            const SizedBox(width: 20),
+                            _statCard("⭐", "Most", "Loved"),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ),
+
 
                   const SizedBox(height: 30),
 
-                  // 🛍 More Products Section
-                  const Text(
-                    "More Products",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  // random 4 products
+                  // 🛍 More Products Section (random 4 products)
+                  _sectionHeading("More Products"),
+                  const SizedBox(height: 26),
                   StreamBuilder(
                     stream: FirebaseFirestore.instance
                         .collection('products')
@@ -795,8 +763,31 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("✅ '${widget.product['title']}' Added to Cart"),
+          duration: Duration(
+            seconds: 10,
+          ),
+          action: SnackBarAction(
+            label: "🛒 Go to Cart",
+            textColor: Colors.orangeAccent,
+            onPressed: () {
+              // yahan apna navigation lagao
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CartPage(),
+                ),
+              );
+            },
+          ),
+          behavior: SnackBarBehavior.floating, // thoda upar show hoga
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
+
+
+
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
@@ -809,35 +800,69 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
 
-}
-
-// ye helper widget bhi same file me bana lena
-class _FeatureItem extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final Color color;
-
-  const _FeatureItem({
-    required this.icon,
-    required this.text,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 30),
-        const SizedBox(height: 6),
-        Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+  Widget _statCard(String emoji, String number, String label) {
+    return Container(
+      width: 100,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white12,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.withOpacity(0.5)),
+      ),
+      child: Column(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 22)), // icon chhota
+          const SizedBox(height: 4),
+          Text(
+            number,
+            style: const TextStyle(
+              color: Colors.orange,
+              fontSize: 14, // text chhota
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 10),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
+
+  Widget _sectionHeading(String title) {
+    return Center(
+      child: Column(
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.playfairDisplay(
+              textStyle: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            height: 3,
+            width: 80,
+            decoration: BoxDecoration(
+              color: Colors.orange,
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 }
+
+
+
+
