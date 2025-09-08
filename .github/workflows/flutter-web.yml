@@ -3,7 +3,7 @@ name: Flutter Web Deploy
 on:
   push:
     branches:
-      - main   # if your branch is "master", change this word to master
+      - main
 
 jobs:
   build:
@@ -22,12 +22,10 @@ jobs:
 
       - name: Build web
         run: flutter build web --release --base-href /MirchBazaar/
-        
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: build/web
           force_orphan: true
-
-

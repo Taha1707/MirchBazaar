@@ -31,7 +31,7 @@ class _AdminHomePageState extends State<AdminHomePage>
 
     // Video Background
     _videoController =
-    VideoPlayerController.asset("assets/images/firework.mp4")
+    VideoPlayerController.asset("assets/images/Firework.mp4")
       ..initialize().then((_) {
         _videoController.setLooping(true);
         _videoController.setVolume(0);

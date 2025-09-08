@@ -34,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
     super.initState();
 
     /// 🔹 Background MP4 video setup
-    _videoController = VideoPlayerController.asset("assets/images/firework.mp4")
+    _videoController = VideoPlayerController.asset("assets/images/Firework.mp4")
       ..initialize().then((_) {
         setState(() {}); // refresh when initialized
         _videoController.setLooping(true);
