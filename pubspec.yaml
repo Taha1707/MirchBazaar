@@ -51,6 +51,7 @@ dependencies:
   flutter_rating_bar: ^4.0.1
   badges: ^3.1.2
   intl: ^0.20.2
+  flutter_launcher_icons: ^0.13.1
 
 
 dev_dependencies:
@@ -107,3 +108,10 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  web: true
+  image_path: "assets/images/chilli.png"
