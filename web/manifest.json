@@ -1,6 +1,6 @@
 {
-    "name": "project",
-    "short_name": "project",
+    "name": "Mirch Bazaar",
+    "short_name": "Mirch Bazaar",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
@@ -15,18 +15,18 @@
             "type": "image/png"
         },
         {
-            "src": "icons/Icon-512.png",
+            "src": "icons/chilli.png",
             "sizes": "512x512",
             "type": "image/png"
         },
         {
-            "src": "icons/Icon-maskable-192.png",
+            "src": "icons/chilli.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "maskable"
         },
         {
-            "src": "icons/Icon-maskable-512.png",
+            "src": "icons/chilli.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"
