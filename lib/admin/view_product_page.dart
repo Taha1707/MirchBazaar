@@ -273,7 +273,7 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                                     : "No Date",
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(fontSize: 10, color: Colors.white70),
+                                                style: const TextStyle(fontSize: 11, color: Colors.white70),
                                               ),
 
                                               const SizedBox(height: 6), // 🔹 reduced
@@ -285,7 +285,7 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                                   Text(
                                                     (data['availability'] == true) ? "✅ Available" : "❌ Not Available",
                                                     style: TextStyle(
-                                                      fontSize: 10, // 🔹 smaller
+                                                      fontSize: 12, // 🔹 smaller
                                                       fontWeight: FontWeight.w500,
                                                       color: (data['availability'] == true)
                                                           ? Colors.greenAccent
@@ -302,7 +302,7 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                                   Row(
                                                     children: [
                                                       // ✏️ Edit Button
-                                                      ElevatedButton.icon(
+                                                      ElevatedButton(
                                                         onPressed: () {
                                                           Navigator.push(
                                                             context,
@@ -314,53 +314,46 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                                             ),
                                                           );
                                                         },
-                                                        icon: const Icon(Icons.edit, size: 12, color: Colors.greenAccent),
-                                                        label: const Text(
-                                                          "Edit",
-                                                          style: TextStyle(fontSize: 9, color: Colors.greenAccent),
-                                                        ),
                                                         style: ElevatedButton.styleFrom(
                                                           backgroundColor: Colors.black.withOpacity(0.7),
                                                           elevation: 6,
                                                           shadowColor: Colors.greenAccent.withOpacity(0.8),
-                                                          minimumSize: const Size(58, 28), // 🔹 smaller button
-                                                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                                                          minimumSize: const Size(36, 28),
+                                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                                                           shape: RoundedRectangleBorder(
                                                             borderRadius: BorderRadius.circular(8),
                                                             side: const BorderSide(color: Colors.greenAccent, width: 0.8),
                                                           ),
                                                         ),
+                                                        child: const Icon(Icons.edit, size: 16, color: Colors.greenAccent),
                                                       ),
 
                                                       const SizedBox(width: 6),
 
                                                       // 🗑 Delete Button
-                                                      ElevatedButton.icon(
+                                                      ElevatedButton(
                                                         onPressed: () async {
                                                           bool confirm = await DeleteHelper.confirmDelete(context, data['title']);
                                                           if (confirm) {
                                                             _deleteProduct(doc.id, data['title']);
                                                           }
                                                         },
-                                                        icon: const Icon(Icons.delete, size: 12, color: Colors.redAccent),
-                                                        label: const Text(
-                                                          "Delete",
-                                                          style: TextStyle(fontSize: 9, color: Colors.redAccent),
-                                                        ),
                                                         style: ElevatedButton.styleFrom(
                                                           backgroundColor: Colors.black.withOpacity(0.7),
                                                           elevation: 6,
                                                           shadowColor: Colors.redAccent.withOpacity(0.8),
-                                                          minimumSize: const Size(58, 28), // 🔹 smaller button
-                                                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                                                          minimumSize: const Size(36, 28),
+                                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                                                           shape: RoundedRectangleBorder(
                                                             borderRadius: BorderRadius.circular(8),
                                                             side: const BorderSide(color: Colors.redAccent, width: 0.8),
                                                           ),
                                                         ),
+                                                        child: const Icon(Icons.delete, size: 16, color: Colors.redAccent),
                                                       ),
                                                     ],
                                                   ),
+
                                                 ],
                                               ),
                                             ],

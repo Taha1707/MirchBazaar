@@ -295,7 +295,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
 
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
                             decoration: BoxDecoration(
                               color: Colors.black54,
                               borderRadius: BorderRadius.circular(12),
@@ -309,16 +309,22 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                   onTap: () {
                                     if (quantity > 1) setState(() => quantity--);
                                   },
-                                  child: Icon(Icons.remove, color: Colors.white, size: 14),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4),
+                                    child: Icon(Icons.remove, color: Colors.white, size: 14),
+                                  ),
                                 ),
 
                                 // Quantity text
-                                Text(
-                                  quantity.toString(),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  child: Text(
+                                    quantity.toString(),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
 
@@ -326,7 +332,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 InkWell(
                                   borderRadius: BorderRadius.circular(8),
                                   onTap: () => setState(() => quantity++),
-                                  child: Icon(Icons.add, color: Colors.white, size: 14),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4),
+                                    child: Icon(Icons.add, color: Colors.white, size: 14),
+                                  ),
                                 ),
                               ],
                             ),

@@ -303,16 +303,22 @@ class _CartPageState extends State<CartPage> {
                                                           _updateQuantity(docId, quantity, item['unitPrice']);
                                                         }
                                                       },
-                                                      child: Icon(Icons.remove, color: Colors.white, size: 14),
+                                                      child: Padding(
+                                                        padding: EdgeInsets.all(4),
+                                                        child: Icon(Icons.remove, color: Colors.white, size: 14),
+                                                      ),
                                                     ),
 
                                                     // Quantity text
-                                                    Text(
-                                                      item['quantity'].toString(),
-                                                      style: const TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.w600,
-                                                        color: Colors.white,
+                                                    Padding(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                                                      child: Text(
+                                                        item['quantity'].toString(),
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          fontWeight: FontWeight.w600,
+                                                          color: Colors.white,
+                                                        ),
                                                       ),
                                                     ),
 
@@ -327,7 +333,10 @@ class _CartPageState extends State<CartPage> {
                                                         });
                                                         _updateQuantity(docId, quantity, item['unitPrice']);
                                                       },
-                                                      child: Icon(Icons.add, color: Colors.white, size: 14),
+                                                      child: Padding(
+                                                        padding: EdgeInsets.all(4),
+                                                        child: Icon(Icons.add, color: Colors.white, size: 14),
+                                                      ),
                                                     ),
                                                   ],
                                                 ),
