@@ -724,7 +724,7 @@ class MixBlendBanner extends StatelessWidget {
 
 
 
-/* ───────────── Testimonials Section ───────────── */
+
 class TestimonialSection extends StatefulWidget {
   const TestimonialSection({super.key});
 
@@ -737,35 +737,14 @@ class _TestimonialSectionState extends State<TestimonialSection> {
   int _activeIndex = 0;
   Timer? _autoTimer;
 
-  final List<Map<String, String>> _testimonials = [
-    {
-      'name': 'Ayesha Khan',
-      'role': 'Biyrani Specialist',
-      'gender': 'female',
-      'review':
-      'This spice exceeded my expectations! Fresh, aromatic, and perfect for my dishes. Highly recommend 🌶️',
-    },
-    {
-      'name': 'Hamza Iqbal',
-      'role': 'Haleem Specialist',
-      'gender': 'male',
-      'review':
-      'Fast delivery, rich flavors, and amazing aroma. Easily the best masala buying experience!',
-    },
-    {
-      'name': 'Mehwish Saleem',
-      'role': 'Karahi Specialist',
-      'gender': 'female',
-      'review':
-      'Premium quality spices and always on time. Mirch Bazaar is now my go-to place!',
-    },
-  ];
+  List<Map<String, String>> _testimonials = [];
 
   @override
   void initState() {
     super.initState();
+    _fetchTestimonials();
     _autoTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (_pageController.hasClients) {
+      if (_pageController.hasClients && _testimonials.isNotEmpty) {
         final next = (_activeIndex + 1) % _testimonials.length;
         _pageController.animateToPage(
           next,
@@ -783,8 +762,50 @@ class _TestimonialSectionState extends State<TestimonialSection> {
     super.dispose();
   }
 
+  Future<void> _fetchTestimonials() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('feedbacks')
+          .where('rating', isEqualTo: 5)
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      // Keep unique emails only
+      final uniqueEmails = <String>{};
+      final List<Map<String, String>> testimonials = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final email = data['email'] ?? '';
+        if (!uniqueEmails.contains(email)) {
+          uniqueEmails.add(email);
+          testimonials.add({
+            'name': email.split('@')[0], // Use email username as name (or store name in DB)
+            'role': data['type'] ?? 'Customer',
+            'gender': 'male', // Optional: can be dynamic if you store gender
+            'review': data['message'] ?? '',
+          });
+        }
+      }
+
+      setState(() {
+        _testimonials = testimonials;
+      });
+    } catch (e) {
+      debugPrint('Error fetching testimonials: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_testimonials.isEmpty) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: Colors.orange,
+        ),
+      );
+    }
+
     return Column(
       children: [
         // 🔹 Heading
@@ -808,7 +829,7 @@ class _TestimonialSectionState extends State<TestimonialSection> {
                 child: SizedBox(
                   width: 300,
                   child: Text(
-                    "Hear what spice lovers say about the flavors that transformed their cooking!",
+                    "Hear what our happy customers say about MirchBazaar!",
                     style: GoogleFonts.poppins(
                       color: Colors.white70,
                       fontSize: 14,
@@ -865,8 +886,6 @@ class _TestimonialSectionState extends State<TestimonialSection> {
     );
   }
 }
-
-/* ───────────── Testimonial Card ───────────── */
 class _TestimonialCard extends StatelessWidget {
   final Map<String, String> data;
   final bool isActive;
@@ -886,6 +905,14 @@ class _TestimonialCard extends StatelessWidget {
       default:
         faceIcon = Icons.face;
     }
+
+    // Capitalize first letter of name
+    String name = data['name']!.isNotEmpty
+        ? data['name']![0].toUpperCase() + data['name']!.substring(1)
+        : "User";
+
+    // Get rating (default 5 if not provided)
+    int rating = int.tryParse(data['rating'] ?? '5') ?? 5;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
@@ -968,7 +995,9 @@ class _TestimonialCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+
+              // 🔹 Small gap before name
+              const SizedBox(height: 8),
 
               // Name
               ShaderMask(
@@ -978,7 +1007,7 @@ class _TestimonialCard extends StatelessWidget {
                   end: Alignment.bottomRight,
                 ).createShader(bounds),
                 child: Text(
-                  data['name']!,
+                  name,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 17,
@@ -997,6 +1026,21 @@ class _TestimonialCard extends StatelessWidget {
                   fontStyle: FontStyle.italic,
                   decoration: TextDecoration.none,
                 ),
+              ),
+
+              // 🔹 Small gap before stars
+              const SizedBox(height: 6),
+
+              // ⭐ Stars Row (AFTER role)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (i) {
+                  return Icon(
+                    i < rating ? Icons.star : Icons.star_border,
+                    color: Colors.orange,
+                    size: 18,
+                  );
+                }),
               ),
             ],
           ),

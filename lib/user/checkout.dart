@@ -670,7 +670,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             text: "Place Order",
                             onTap: () => placeOrder(context),
                           )
-                          
+
                         ],
                       ),
                     ),

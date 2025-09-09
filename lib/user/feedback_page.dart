@@ -3,8 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:project/user/user_drawer.dart';
-import '../services/authentication.dart';
-import '../services/validation.dart';
 
 final user = FirebaseAuth.instance.currentUser;
 final userEmail = user?.email ?? 'No Email';
@@ -20,7 +18,7 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _messageController = TextEditingController();
-  String _feedbackType = 'General';
+  String _feedbackType = 'Overall Experience';
   int _rating = 0;
   bool _isSending = false;
   late AnimationController _controller;
@@ -75,7 +73,7 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
       clearData();
 
       setState(() {
-        _feedbackType = 'General';
+        _feedbackType = 'Overall Experience';
         _rating = 0;
       });
     } catch (e) {
@@ -88,6 +86,17 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
     }
 
     setState(() => _isSending = false);
+  }
+
+  String? validateMessage(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Feedback cannot be empty';
+    }
+    final wordCount = value.trim().split(RegExp(r'\s+')).length;
+    if (wordCount < 10) {
+      return 'Please write at least 10 words for meaningful feedback';
+    }
+    return null;
   }
 
   Widget _buildStarRating() {
@@ -108,7 +117,6 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
     );
   }
 
-  // Section Heading with Orange Underline (same as About Us)
   Widget _sectionHeading(String title) {
     return Column(
       children: [
@@ -136,7 +144,6 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
     );
   }
 
-  // Themed Input Field
   Widget _buildThemedTextField({
     required String hintText,
     required IconData icon,
@@ -202,13 +209,13 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
             borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide.none,
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
     );
   }
 
-  // Themed Dropdown
   Widget _buildThemedDropdown() {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -254,9 +261,15 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
             borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(color: Colors.orange, width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
-        items: ['General', 'Bug Report', 'Feature Request', 'Other']
+        items: [
+          'Overall Experience',
+          'Product Quality',
+          'Service & Support',
+          'Ease of Use'
+        ]
             .map(
               (type) => DropdownMenuItem(
             value: type,
@@ -298,16 +311,6 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
               : Icon(Icons.menu, color: Colors.white),
           onPressed: _toggleMenu,
         ),
-
-        actions: <Widget>[
-          IconButton(
-            onPressed: () async {
-              await AuthenticationHelper().signOut();
-              Navigator.pushReplacementNamed(context, "/LoginPage");
-            },
-            icon: Icon(Icons.logout_outlined, color: Colors.white),
-          ),
-        ],
       ),
       body: Stack(
         children: [
@@ -317,7 +320,6 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
                 // Hero Section with Glass Card
                 Stack(
                   children: [
-                    // Background Banner
                     Container(
                       height: MediaQuery.of(context).size.height * 0.35,
                       width: double.infinity,
@@ -328,15 +330,11 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
                         ),
                       ),
                     ),
-
-                    // Dark overlay
                     Container(
                       height: MediaQuery.of(context).size.height * 0.35,
                       width: double.infinity,
                       color: Colors.black.withOpacity(0.5),
                     ),
-
-                    // Center Glass Card
                     Positioned.fill(
                       child: Align(
                         alignment: Alignment.center,
@@ -346,7 +344,8 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.08),
                             borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: Colors.orange.withOpacity(0.4)),
+                            border:
+                            Border.all(color: Colors.orange.withOpacity(0.4)),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.4),
@@ -390,20 +389,18 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 30),
 
                 // Feedback Form Section
                 _sectionHeading("Share Your Experience"),
-
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Email Warning
                         Padding(
                           padding: const EdgeInsets.only(left: 4, bottom: 8),
                           child: Text(
@@ -418,18 +415,16 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
                           ),
                         ),
 
-                        // Email Field
                         _buildThemedTextField(
                           hintText: "Email Address",
                           icon: Icons.email_outlined,
-                          initialValue: FirebaseAuth.instance.currentUser?.email ?? 'No Email',
+                          initialValue:
+                          FirebaseAuth.instance.currentUser?.email ?? 'No Email',
                           enabled: false,
                         ),
 
-                        // Feedback Type Dropdown
                         _buildThemedDropdown(),
 
-                        // Rating Section
                         Padding(
                           padding: const EdgeInsets.only(left: 4, bottom: 8),
                           child: Text(
@@ -461,7 +456,6 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
                           child: _buildStarRating(),
                         ),
 
-                        // Message Field
                         _buildThemedTextField(
                           hintText: "Describe your feedback or suggestions...",
                           icon: Icons.message_outlined,
@@ -472,7 +466,6 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
 
                         const SizedBox(height: 10),
 
-                        // Send Button
                         SizedBox(
                           width: double.infinity,
                           height: 50,
@@ -484,9 +477,8 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
+                                valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
                                 : Icon(Icons.send_rounded, color: Colors.white),
@@ -515,13 +507,11 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 50),
               ],
             ),
           ),
 
-          // Drawer (same as About Us)
           AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
