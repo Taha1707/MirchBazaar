@@ -295,47 +295,43 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
 
                           Container(
-                            height: 20,
-                            width: 58,
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(6), // aur chhota radius
-                              border: Border.all(color: Colors.white, width: 0.8),
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                IconButton(
-                                  icon: const Icon(Icons.remove, color: Colors.white, size: 14),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24), // ✅ aur compact
-                                  onPressed: () {
-                                    if (quantity > 1) {
-                                      setState(() => quantity--);
-                                    }
+                                // Minus button
+                                InkWell(
+                                  borderRadius: BorderRadius.circular(8),
+                                  onTap: () {
+                                    if (quantity > 1) setState(() => quantity--);
                                   },
+                                  child: Icon(Icons.remove, color: Colors.white, size: 14),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 0), // ✅ spacing kam
-                                  child: Text(
-                                    quantity.toString(),
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
+
+                                // Quantity text
+                                Text(
+                                  quantity.toString(),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
                                   ),
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.add, color: Colors.white, size: 14),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24), // ✅ aur compact
-                                  onPressed: () {
-                                    setState(() => quantity++);
-                                  },
+
+                                // Plus button
+                                InkWell(
+                                  borderRadius: BorderRadius.circular(8),
+                                  onTap: () => setState(() => quantity++),
+                                  child: Icon(Icons.add, color: Colors.white, size: 14),
                                 ),
                               ],
                             ),
-                          )
+                          ),
+
 
                         ],
                       ),

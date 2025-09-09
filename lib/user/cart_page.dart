@@ -282,20 +282,18 @@ class _CartPageState extends State<CartPage> {
                                                 .spaceBetween,
                                             children: [
                                               Container(
-                                                height: 20,
-                                                width: 54,
+                                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                                                 decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.circular(6), // aur chhota radius
-                                                  border: Border.all(color: Colors.white, width: 0.8), // patla border
+                                                  color: Colors.black54,
+                                                  borderRadius: BorderRadius.circular(12),
                                                 ),
                                                 child: Row(
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
-                                                    IconButton(
-                                                      icon: const Icon(Icons.remove, color: Colors.white, size: 11), // chhoti icon
-                                                      padding: EdgeInsets.zero,
-                                                      constraints: const BoxConstraints(minWidth: 20, minHeight: 20), // aur compact
-                                                      onPressed: () {
+                                                    // Minus button
+                                                    InkWell(
+                                                      borderRadius: BorderRadius.circular(8),
+                                                      onTap: () {
                                                         int quantity = item['quantity'];
                                                         if (quantity > 1) {
                                                           setState(() {
@@ -305,26 +303,23 @@ class _CartPageState extends State<CartPage> {
                                                           _updateQuantity(docId, quantity, item['unitPrice']);
                                                         }
                                                       },
+                                                      child: Icon(Icons.remove, color: Colors.white, size: 14),
                                                     ),
 
                                                     // Quantity text
-                                                    Padding(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 2), // aur kam space
-                                                      child: Text(
-                                                        item['quantity'].toString(),
-                                                        style: const TextStyle(
-                                                          fontSize: 9, // chhoti font
-                                                          fontWeight: FontWeight.bold,
-                                                          color: Colors.white,
-                                                        ),
+                                                    Text(
+                                                      item['quantity'].toString(),
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.w600,
+                                                        color: Colors.white,
                                                       ),
                                                     ),
 
-                                                    IconButton(
-                                                      icon: const Icon(Icons.add, color: Colors.white, size: 11), // chhoti icon
-                                                      padding: EdgeInsets.zero,
-                                                      constraints: const BoxConstraints(minWidth: 20, minHeight: 20), // compact
-                                                      onPressed: () {
+                                                    // Plus button
+                                                    InkWell(
+                                                      borderRadius: BorderRadius.circular(8),
+                                                      onTap: () {
                                                         int quantity = item['quantity'];
                                                         setState(() {
                                                           quantity++;
@@ -332,17 +327,19 @@ class _CartPageState extends State<CartPage> {
                                                         });
                                                         _updateQuantity(docId, quantity, item['unitPrice']);
                                                       },
+                                                      child: Icon(Icons.add, color: Colors.white, size: 14),
                                                     ),
                                                   ],
                                                 ),
                                               ),
 
+
                                               Align(
                                                 alignment:
                                                 Alignment.bottomRight,
                                                 child: Container(
-                                                  height: 25,
-                                                  width: 25,
+                                                  height: 30,
+                                                  width: 30,
                                                   decoration: BoxDecoration(
                                                     gradient:
                                                     const LinearGradient(
@@ -389,7 +386,7 @@ class _CartPageState extends State<CartPage> {
                                                           icon: const Icon(
                                                             Icons.delete,
                                                             color: Colors.white,
-                                                            size: 14,
+                                                            size: 16,
                                                           ),
                                                           onPressed: () async {
                                                             await _removeItems(item['docIds'], item['title']);

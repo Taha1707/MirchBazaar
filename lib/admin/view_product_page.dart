@@ -285,7 +285,7 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                                   Text(
                                                     (data['availability'] == true) ? "✅ Available" : "❌ Not Available",
                                                     style: TextStyle(
-                                                      fontSize: 11, // 🔹 smaller
+                                                      fontSize: 10, // 🔹 smaller
                                                       fontWeight: FontWeight.w500,
                                                       color: (data['availability'] == true)
                                                           ? Colors.greenAccent
