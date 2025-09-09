@@ -295,7 +295,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
 
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+                            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 5),
                             decoration: BoxDecoration(
                               color: Colors.black54,
                               borderRadius: BorderRadius.circular(12),

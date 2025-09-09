@@ -282,7 +282,7 @@ class _CartPageState extends State<CartPage> {
                                                 .spaceBetween,
                                             children: [
                                               Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 5),
                                                 decoration: BoxDecoration(
                                                   color: Colors.black54,
                                                   borderRadius: BorderRadius.circular(12),

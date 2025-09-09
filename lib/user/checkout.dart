@@ -301,6 +301,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         "address": address,
         "cartItems": cartItems,
         "total": total,
+        "status": "Pending",
         "timestamp": FieldValue.serverTimestamp(),
       };
 
