@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project/user/feedback_page.dart';
 import 'package:project/user/home_user.dart';
+import 'package:project/user/my_orders.dart';
 import 'package:project/user/product_page.dart';
 import 'package:project/user/about_us.dart';
 import '../logout_page.dart';
@@ -35,8 +36,8 @@ class UserDrawer extends StatelessWidget {
             ),
             _menuItem(context, Icons.home, "Home", route: HomePage()),
             _menuItem(context, Icons.shopping_bag, "Shop", route: UserProductPage()), // example route
+            _menuItem(context, Icons.receipt_long, "My Orders", route: MyOrdersPage()),
             _menuItem(context, Icons.favorite, "Wishlist"),
-            _menuItem(context, Icons.receipt_long, "My Orders"),
             _menuItem(context, Icons.contact_support, "Support"),
             _menuItem(context, Icons.question_mark_sharp, "About", route: AboutUsPage()),
             _menuItem(context, Icons.feedback, "Feedback" , route: FeedbackFormPage()),

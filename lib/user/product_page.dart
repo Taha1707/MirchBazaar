@@ -102,7 +102,7 @@ class _UserProductPageState extends State<UserProductPage>
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                           child: Container(
-                            height: 40,
+                            height: 50,
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.08),
                               borderRadius: BorderRadius.circular(14),
@@ -112,27 +112,16 @@ class _UserProductPageState extends State<UserProductPage>
                               ),
                             ),
                             child: TextField(
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                              ),
+                              style: const TextStyle(color: Colors.white),
                               onChanged: (val) {
-                                setState(
-                                  () => _searchQuery = val.toLowerCase(),
-                                );
+                                setState(() => _searchQuery = val.toLowerCase());
                               },
                               decoration: const InputDecoration(
                                 hintText: "Search Products...",
                                 hintStyle: TextStyle(color: Colors.white70),
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  color: Colors.orangeAccent,
-                                ),
+                                prefixIcon: Icon(Icons.search, color: Colors.orangeAccent),
                                 border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: 7,
-                                  horizontal: 8,
-                                ),
+                                contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 8),
                               ),
                             ),
                           ),

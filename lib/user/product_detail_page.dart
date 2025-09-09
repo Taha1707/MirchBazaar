@@ -295,6 +295,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
 
                           Container(
+                            height: 20,
+                            width: 58,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(6), // aur chhota radius
                               border: Border.all(color: Colors.white, width: 0.8),

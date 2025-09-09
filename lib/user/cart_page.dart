@@ -215,8 +215,8 @@ class _CartPageState extends State<CartPage> {
                                       borderRadius: BorderRadius.circular(12),
                                       child: Image.memory(
                                         base64Decode(item['image']),
-                                        width: 76,
-                                        height: 76,
+                                        width: 80,
+                                        height: 80,
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -236,7 +236,7 @@ class _CartPageState extends State<CartPage> {
                                                 style: const TextStyle(
                                                   color: Colors.white,
                                                   fontWeight: FontWeight.bold,
-                                                  fontSize: 14,
+                                                  fontSize: 16,
                                                 ),
                                               ),
                                               Container(
@@ -259,7 +259,7 @@ class _CartPageState extends State<CartPage> {
                                                 child: Text(
                                                   "Rs. ${item['unitPrice']}",
                                                   style: const TextStyle(
-                                                    fontSize: 10,
+                                                    fontSize: 11,
                                                     fontWeight: FontWeight.bold,
                                                     color: Colors.white,
                                                   ),
@@ -272,7 +272,7 @@ class _CartPageState extends State<CartPage> {
                                             "Weight: ${item['weight']} | Qty: ${item['quantity']}",
                                             style: const TextStyle(
                                               color: Colors.white70,
-                                              fontSize: 8,
+                                              fontSize: 10,
                                             ),
                                           ),
                                           const SizedBox(height: 10),
@@ -282,6 +282,8 @@ class _CartPageState extends State<CartPage> {
                                                 .spaceBetween,
                                             children: [
                                               Container(
+                                                height: 20,
+                                                width: 54,
                                                 decoration: BoxDecoration(
                                                   borderRadius: BorderRadius.circular(6), // aur chhota radius
                                                   border: Border.all(color: Colors.white, width: 0.8), // patla border
@@ -339,6 +341,8 @@ class _CartPageState extends State<CartPage> {
                                                 alignment:
                                                 Alignment.bottomRight,
                                                 child: Container(
+                                                  height: 25,
+                                                  width: 25,
                                                   decoration: BoxDecoration(
                                                     gradient:
                                                     const LinearGradient(
@@ -355,7 +359,7 @@ class _CartPageState extends State<CartPage> {
                                                         8),
                                                   ),
                                                   padding:
-                                                  const EdgeInsets.all(1.2),
+                                                  const EdgeInsets.all(0.2),
                                                   child: ClipRRect(
                                                     borderRadius:
                                                     BorderRadius.circular(
@@ -460,33 +464,48 @@ class _CartPageState extends State<CartPage> {
                         ),
                       ],
                     ),
+
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black.withOpacity(0.6),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 22,
-                          vertical: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                              builder: (context) => CheckoutPage()),
+                          MaterialPageRoute(builder: (context) => CheckoutPage()),
                         );
                       },
-                      child: const Text(
-                        "Proceed",
-                        style: TextStyle(
-                          color: Colors.white,
-                          letterSpacing: 2,
-                          fontWeight: FontWeight.bold,
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.zero, // padding will be inside Ink
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 4,
+                        shadowColor: Colors.black38,
+                        backgroundColor: Colors.transparent, // important for gradient
+                      ),
+                      child: Ink(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Colors.yellow, Colors.redAccent, Colors.orange], // orange → pink gradient
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          alignment: Alignment.center,
+                          child: const Text(
+                            "Proceed",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
                       ),
                     ),
+
                   ],
                 ),
               ),

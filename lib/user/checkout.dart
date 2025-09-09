@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
+import 'package:project/user/my_orders.dart';
 
 
 /// ✅ Universal function: mobile par geocoding plugin, web par OpenStreetMap API
@@ -290,6 +291,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       });
 
       final orderData = {
+        "userId": FirebaseAuth.instance.currentUser!.uid,
         "name": _nameController.text.trim(),
         "paymentMethod": _selectedPayment,
         "location": {
@@ -311,7 +313,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         const SnackBar(content: Text("✅ Order placed successfully")),
       );
 
-      Navigator.pop(context);
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MyOrdersPage()));
 
     } finally {
       setState(() => _isPlacingOrder = false); // ✅ hide loader

@@ -216,8 +216,8 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                           borderRadius: BorderRadius.circular(12),
                                           child: Image.memory(
                                             base64Decode(data['image']),
-                                            width: 64,
-                                            height: 64,
+                                            width: 80,
+                                            height: 80,
                                             fit: BoxFit.cover,
                                           ),
                                         ),
@@ -236,7 +236,7 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                                     child: Text(
                                                       data['title'] ?? 'No Title',
                                                       style: const TextStyle(
-                                                        fontSize: 13, // 🔹 smaller
+                                                        fontSize: 16, // 🔹 smaller
                                                         fontWeight: FontWeight.w600,
                                                         color: Colors.white,
                                                       ),
@@ -255,7 +255,7 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                                           ? "Rs. ${data['pricePer250g']} (250g)"
                                                           : "Rs. 0 (250g)",
                                                       style: const TextStyle(
-                                                        fontSize: 8, // 🔹 smaller text
+                                                        fontSize: 11, // 🔹 smaller text
                                                         fontWeight: FontWeight.w600,
                                                         color: Colors.white,
                                                       ),
@@ -273,7 +273,7 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                                     : "No Date",
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(fontSize: 9, color: Colors.white70),
+                                                style: const TextStyle(fontSize: 10, color: Colors.white70),
                                               ),
 
                                               const SizedBox(height: 6), // 🔹 reduced
@@ -285,7 +285,7 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                                   Text(
                                                     (data['availability'] == true) ? "✅ Available" : "❌ Not Available",
                                                     style: TextStyle(
-                                                      fontSize: 8, // 🔹 smaller
+                                                      fontSize: 11, // 🔹 smaller
                                                       fontWeight: FontWeight.w500,
                                                       color: (data['availability'] == true)
                                                           ? Colors.greenAccent
