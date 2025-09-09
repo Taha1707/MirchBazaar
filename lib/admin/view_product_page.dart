@@ -216,8 +216,8 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                           borderRadius: BorderRadius.circular(12),
                                           child: Image.memory(
                                             base64Decode(data['image']),
-                                            width: 90,
-                                            height: 90,
+                                            width: 64,
+                                            height: 64,
                                             fit: BoxFit.cover,
                                           ),
                                         ),
@@ -236,27 +236,27 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                                     child: Text(
                                                       data['title'] ?? 'No Title',
                                                       style: const TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 13, // 🔹 smaller
+                                                        fontWeight: FontWeight.w600,
                                                         color: Colors.white,
                                                       ),
                                                     ),
                                                   ),
                                                   Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), // 🔹 tighter
                                                     decoration: BoxDecoration(
                                                       gradient: const LinearGradient(
                                                         colors: [Colors.orange, Colors.red],
                                                       ),
-                                                      borderRadius: BorderRadius.circular(6),
+                                                      borderRadius: BorderRadius.circular(5),
                                                     ),
                                                     child: Text(
                                                       (data['pricePer250g'] != null)
                                                           ? "Rs. ${data['pricePer250g']} (250g)"
                                                           : "Rs. 0 (250g)",
                                                       style: const TextStyle(
-                                                        fontSize: 11,
-                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 8, // 🔹 smaller text
+                                                        fontWeight: FontWeight.w600,
                                                         color: Colors.white,
                                                       ),
                                                     ),
@@ -264,7 +264,7 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                                 ],
                                               ),
 
-                                              const SizedBox(height: 6),
+                                              const SizedBox(height: 4), // 🔹 less spacing
 
                                               // Timestamp
                                               Text(
@@ -273,10 +273,10 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                                     : "No Date",
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(fontSize: 11, color: Colors.white70),
+                                                style: const TextStyle(fontSize: 9, color: Colors.white70),
                                               ),
 
-                                              const SizedBox(height: 10),
+                                              const SizedBox(height: 6), // 🔹 reduced
 
                                               // Availability + Buttons
                                               Row(
@@ -285,15 +285,15 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                                   Text(
                                                     (data['availability'] == true) ? "✅ Available" : "❌ Not Available",
                                                     style: TextStyle(
-                                                      fontSize: 13,
-                                                      fontWeight: FontWeight.w600,
+                                                      fontSize: 8, // 🔹 smaller
+                                                      fontWeight: FontWeight.w500,
                                                       color: (data['availability'] == true)
                                                           ? Colors.greenAccent
                                                           : Colors.redAccent,
                                                       shadows: [
                                                         Shadow(
                                                           color: Colors.black.withOpacity(0.8),
-                                                          blurRadius: 4,
+                                                          blurRadius: 3,
                                                         ),
                                                       ],
                                                     ),
@@ -314,25 +314,25 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                                             ),
                                                           );
                                                         },
-                                                        icon: const Icon(Icons.edit, size: 14, color: Colors.greenAccent),
+                                                        icon: const Icon(Icons.edit, size: 12, color: Colors.greenAccent),
                                                         label: const Text(
                                                           "Edit",
-                                                          style: TextStyle(fontSize: 11, color: Colors.greenAccent),
+                                                          style: TextStyle(fontSize: 9, color: Colors.greenAccent),
                                                         ),
                                                         style: ElevatedButton.styleFrom(
                                                           backgroundColor: Colors.black.withOpacity(0.7),
-                                                          elevation: 10,
-                                                          shadowColor: Colors.greenAccent.withOpacity(1),
-                                                          minimumSize: const Size(70, 34),
-                                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                          elevation: 6,
+                                                          shadowColor: Colors.greenAccent.withOpacity(0.8),
+                                                          minimumSize: const Size(58, 28), // 🔹 smaller button
+                                                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                                                           shape: RoundedRectangleBorder(
-                                                            borderRadius: BorderRadius.circular(10),
-                                                            side: const BorderSide(color: Colors.greenAccent, width: 1),
+                                                            borderRadius: BorderRadius.circular(8),
+                                                            side: const BorderSide(color: Colors.greenAccent, width: 0.8),
                                                           ),
                                                         ),
                                                       ),
 
-                                                      const SizedBox(width: 8),
+                                                      const SizedBox(width: 6),
 
                                                       // 🗑 Delete Button
                                                       ElevatedButton.icon(
@@ -342,20 +342,20 @@ class _ViewProductPageState extends State<ViewProductPage> {
                                                             _deleteProduct(doc.id, data['title']);
                                                           }
                                                         },
-                                                        icon: const Icon(Icons.delete, size: 14, color: Colors.redAccent),
+                                                        icon: const Icon(Icons.delete, size: 12, color: Colors.redAccent),
                                                         label: const Text(
                                                           "Delete",
-                                                          style: TextStyle(fontSize: 11, color: Colors.redAccent),
+                                                          style: TextStyle(fontSize: 9, color: Colors.redAccent),
                                                         ),
                                                         style: ElevatedButton.styleFrom(
                                                           backgroundColor: Colors.black.withOpacity(0.7),
-                                                          elevation: 10,
-                                                          shadowColor: Colors.redAccent.withOpacity(1),
-                                                          minimumSize: const Size(70, 34),
-                                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                          elevation: 6,
+                                                          shadowColor: Colors.redAccent.withOpacity(0.8),
+                                                          minimumSize: const Size(58, 28), // 🔹 smaller button
+                                                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                                                           shape: RoundedRectangleBorder(
-                                                            borderRadius: BorderRadius.circular(10),
-                                                            side: const BorderSide(color: Colors.redAccent, width: 1),
+                                                            borderRadius: BorderRadius.circular(8),
+                                                            side: const BorderSide(color: Colors.redAccent, width: 0.8),
                                                           ),
                                                         ),
                                                       ),

@@ -51,6 +51,10 @@ dependencies:
   flutter_rating_bar: ^4.0.1
   badges: ^3.1.2
   intl: ^0.20.2
+  geocoding: ^4.0.0
+  latlong2: ^0.9.1
+  flutter_map: ^8.2.1
+  geolocator: ^14.0.2
 
 
 dev_dependencies:

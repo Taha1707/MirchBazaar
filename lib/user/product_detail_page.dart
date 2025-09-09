@@ -295,56 +295,46 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
 
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 6,
-                            ),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white, width: 1),
+                              borderRadius: BorderRadius.circular(6), // aur chhota radius
+                              border: Border.all(color: Colors.white, width: 0.8),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const Icon(
-                                    Icons.remove,
-                                    color: Colors.white,
-                                    size: 16,
-                                  ),
+                                  icon: const Icon(Icons.remove, color: Colors.white, size: 14),
                                   padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
+                                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24), // ✅ aur compact
                                   onPressed: () {
                                     if (quantity > 1) {
                                       setState(() => quantity--);
                                     }
                                   },
                                 ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  quantity.toString(),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 0), // ✅ spacing kam
+                                  child: Text(
+                                    quantity.toString(),
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
                                 IconButton(
-                                  icon: const Icon(
-                                    Icons.add,
-                                    color: Colors.white,
-                                    size: 16,
-                                  ),
+                                  icon: const Icon(Icons.add, color: Colors.white, size: 14),
                                   padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
+                                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24), // ✅ aur compact
                                   onPressed: () {
                                     setState(() => quantity++);
                                   },
                                 ),
                               ],
                             ),
-                          ),
+                          )
+
                         ],
                       ),
 
@@ -904,18 +894,19 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        // Show a simple error message for login
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Please login to add items to cart")),
         );
         return;
       }
 
-      final productId = widget.product['id'] ?? DateTime.now().millisecondsSinceEpoch.toString();
+      final productId = widget.product['id'] ??
+          DateTime.now().millisecondsSinceEpoch.toString();
 
+      // 👇 unique doc per product+weight (same product + same weight => update, not new doc)
       final cartRef = FirebaseFirestore.instance
-          .collection('carts') // ✅ ye rules ke hisaab se match karega
-          .doc(user.uid)       // ✅ yahan apna user id lagega
+          .collection('carts')
+          .doc(user.uid)
           .collection('items')
           .doc(productId + "_" + selectedWeight);
 
@@ -923,12 +914,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       final doc = await cartRef.get();
 
       if (doc.exists) {
-        final currentQty = doc['quantity'] ?? 1;
+        // 👇 update if already exists
+        final currentQty = (doc['quantity'] as num?)?.toInt() ?? 1;
+        final newQty = currentQty + quantity;
+
         await cartRef.update({
-          'quantity': currentQty + quantity,
-          'totalPrice': (currentQty + quantity) * unitPrice,
+          'quantity': newQty,
+          'totalPrice': newQty * unitPrice,
         });
       } else {
+        // 👇 create if not exists
         await cartRef.set({
           'productId': productId,
           'title': widget.product['title'],
@@ -941,11 +936,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         });
       }
 
-      // Update cart notification with new totals
+      // 👇 Foodpanda-style bottom bar notification update
       _updateCartNotification();
 
     } catch (e) {
-      // Handle error - could show error version of notification
       print("Error adding to cart: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
@@ -957,37 +951,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     }
   }
 
-  Widget _statCard(String emoji, String number, String label) {
-    return Container(
-      width: 100,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white12,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.withOpacity(0.5)),
-      ),
-      child: Column(
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 22)), // icon chhota
-          const SizedBox(height: 4),
-          Text(
-            number,
-            style: const TextStyle(
-              color: Colors.orange,
-              fontSize: 14, // text chhota
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white70, fontSize: 10),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _sectionHeading(String title) {
     return Center(

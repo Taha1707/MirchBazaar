@@ -3,8 +3,6 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:project/user/product_page.dart';
-
 import 'checkout.dart';
 
 class CartPage extends StatefulWidget {
@@ -17,18 +15,31 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   final user = FirebaseAuth.instance.currentUser!;
 
-  Future<void> _removeItem(String docId, String title) async {
-    await FirebaseFirestore.instance
-        .collection('carts')
-        .doc(user.uid)
-        .collection('items')
-        .doc(docId)
-        .delete();
+  Future<void> _removeItems(List<String> docIds, String title) async {
+    WriteBatch batch = FirebaseFirestore.instance.batch();
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('🗑️ "$title" removed from cart')));
+    for (String docId in docIds) {
+      final ref = FirebaseFirestore.instance
+          .collection('carts')
+          .doc(user.uid)
+          .collection('items')
+          .doc(docId);
+
+      batch.delete(ref);
+    }
+
+    // ek hi baar commit hoga
+    await batch.commit();
+
+    // ek hi snackbar show hoga
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('🗑️ "$title" removed from cart'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
+
 
   Future<void> _updateQuantity(
       String docId,
@@ -113,9 +124,40 @@ class _CartPageState extends State<CartPage> {
           }
 
           final items = snapshot.data!.docs;
-          double totalPrice = items.fold(
+
+          // ✅ Grouping by product + weight
+          Map<String, Map<String, dynamic>> groupedItems = {};
+
+          for (var doc in items) {
+            final data = doc.data() as Map<String, dynamic>;
+            final productId = data['title'];
+            final weight = data['selectedWeight'];
+            final key = "$productId-$weight"; // ✅ unique key
+            final quantity = (data['quantity'] as num).toInt();
+
+            if (!groupedItems.containsKey(key)) {
+              groupedItems[key] = {
+                'docIds': [doc.id],
+                'title': data['title'],
+                'image': data['image'],
+                'unitPrice': data['unitPrice'],
+                'weight': weight,
+                'quantity': quantity,
+                'totalPrice': (data['totalPrice'] as num).toDouble(),
+              };
+            } else {
+              groupedItems[key]!['quantity'] =
+                  (groupedItems[key]!['quantity'] as int) + quantity;
+              groupedItems[key]!['totalPrice'] =
+                  (groupedItems[key]!['totalPrice'] as double) +
+                      (data['totalPrice'] as num).toDouble();
+              groupedItems[key]!['docIds'].add(doc.id);
+            }
+          }
+
+          double totalPrice = groupedItems.values.fold(
             0,
-                (sum, doc) => sum + (doc['totalPrice'] as num),
+                (sum, item) => sum + (item['totalPrice'] as num).toDouble(),
           );
 
           return Column(
@@ -123,12 +165,12 @@ class _CartPageState extends State<CartPage> {
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  itemCount: items.length,
+                  itemCount: groupedItems.length,
                   itemBuilder: (context, index) {
-                    final doc = items[index];
-                    final data = doc.data() as Map<String, dynamic>;
+                    final item = groupedItems.values.elementAt(index);
+                    final docIds = item['docIds'];
+                    final docId = docIds[0]; // first docId for quantity ops
 
-                    // 👇 is jagah se Dismissible hata do
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
@@ -172,43 +214,50 @@ class _CartPageState extends State<CartPage> {
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(12),
                                       child: Image.memory(
-                                        base64Decode(data['image']),
-                                        width: 90,
-                                        height: 90,
+                                        base64Decode(item['image']),
+                                        width: 76,
+                                        height: 76,
                                         fit: BoxFit.cover,
                                       ),
                                     ),
                                     const SizedBox(width: 14),
-
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                         children: [
                                           const SizedBox(height: 4),
                                           Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                             children: [
                                               Text(
-                                                data['title'],
+                                                item['title'],
                                                 style: const TextStyle(
                                                   color: Colors.white,
                                                   fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
+                                                  fontSize: 14,
                                                 ),
                                               ),
                                               Container(
-                                                padding: const EdgeInsets.symmetric(
+                                                padding:
+                                                const EdgeInsets.symmetric(
                                                   horizontal: 8,
                                                   vertical: 4,
                                                 ),
                                                 decoration: BoxDecoration(
-                                                  gradient: const LinearGradient(
-                                                    colors: [Colors.orange, Colors.red],
+                                                  gradient:
+                                                  const LinearGradient(
+                                                    colors: [
+                                                      Colors.orange,
+                                                      Colors.red
+                                                    ],
                                                   ),
-                                                  borderRadius: BorderRadius.circular(6),
+                                                  borderRadius:
+                                                  BorderRadius.circular(6),
                                                 ),
                                                 child: Text(
-                                                  "Rs. ${data['unitPrice']}",
+                                                  "Rs. ${item['unitPrice']}",
                                                   style: const TextStyle(
                                                     fontSize: 10,
                                                     fontWeight: FontWeight.bold,
@@ -220,61 +269,66 @@ class _CartPageState extends State<CartPage> {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            "Weight: ${data['selectedWeight']}",
+                                            "Weight: ${item['weight']} | Qty: ${item['quantity']}",
                                             style: const TextStyle(
                                               color: Colors.white70,
-                                              fontSize: 13,
+                                              fontSize: 8,
                                             ),
                                           ),
                                           const SizedBox(height: 10),
                                           Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            mainAxisAlignment:
+                                            MainAxisAlignment
+                                                .spaceBetween,
                                             children: [
                                               Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                  horizontal: 7,
-                                                  vertical: 4,
-                                                ),
                                                 decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.circular(10),
-                                                  border: Border.all(
-                                                    color: Colors.white70,
-                                                    width: 1,
-                                                  ),
+                                                  borderRadius: BorderRadius.circular(6), // aur chhota radius
+                                                  border: Border.all(color: Colors.white, width: 0.8), // patla border
                                                 ),
                                                 child: Row(
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
                                                     IconButton(
-                                                      icon: const Icon(Icons.remove, color: Colors.white70, size: 15),
+                                                      icon: const Icon(Icons.remove, color: Colors.white, size: 11), // chhoti icon
                                                       padding: EdgeInsets.zero,
-                                                      constraints: const BoxConstraints(),
+                                                      constraints: const BoxConstraints(minWidth: 20, minHeight: 20), // aur compact
                                                       onPressed: () {
-                                                        final currentQty = data['quantity'] as int;
-                                                        double unitPrice = (data['unitPrice'] as num).toDouble();
-                                                        if (currentQty > 1) {
-                                                          _updateQuantity(doc.id, currentQty - 1, unitPrice);
+                                                        int quantity = item['quantity'];
+                                                        if (quantity > 1) {
+                                                          setState(() {
+                                                            quantity--;
+                                                            item['quantity'] = quantity;
+                                                          });
+                                                          _updateQuantity(docId, quantity, item['unitPrice']);
                                                         }
                                                       },
                                                     ),
-                                                    const SizedBox(width: 6),
-                                                    Text(
-                                                      '${data['quantity']}',
-                                                      style: const TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: Colors.white70,
+
+                                                    // Quantity text
+                                                    Padding(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 2), // aur kam space
+                                                      child: Text(
+                                                        item['quantity'].toString(),
+                                                        style: const TextStyle(
+                                                          fontSize: 9, // chhoti font
+                                                          fontWeight: FontWeight.bold,
+                                                          color: Colors.white,
+                                                        ),
                                                       ),
                                                     ),
-                                                    const SizedBox(width: 6),
+
                                                     IconButton(
-                                                      icon: const Icon(Icons.add, color: Colors.white70, size: 15),
+                                                      icon: const Icon(Icons.add, color: Colors.white, size: 11), // chhoti icon
                                                       padding: EdgeInsets.zero,
-                                                      constraints: const BoxConstraints(),
+                                                      constraints: const BoxConstraints(minWidth: 20, minHeight: 20), // compact
                                                       onPressed: () {
-                                                        final currentQty = data['quantity'] as int;
-                                                        double unitPrice = (data['unitPrice'] as num).toDouble();
-                                                        _updateQuantity(doc.id, currentQty + 1, unitPrice);
+                                                        int quantity = item['quantity'];
+                                                        setState(() {
+                                                          quantity++;
+                                                          item['quantity'] = quantity;
+                                                        });
+                                                        _updateQuantity(docId, quantity, item['unitPrice']);
                                                       },
                                                     ),
                                                   ],
@@ -282,49 +336,76 @@ class _CartPageState extends State<CartPage> {
                                               ),
 
                                               Align(
-                                                alignment: Alignment.bottomRight,
+                                                alignment:
+                                                Alignment.bottomRight,
                                                 child: Container(
-                                                  margin: EdgeInsets.only(
-                                                    bottom: 10,
-                                                  ),
                                                   decoration: BoxDecoration(
-                                                    gradient: const LinearGradient(
-                                                      colors: [Colors.redAccent, Colors.orange],
+                                                    gradient:
+                                                    const LinearGradient(
+                                                      colors: [
+                                                        Colors.redAccent,
+                                                        Colors.orange
+                                                      ],
                                                       begin: Alignment.topLeft,
-                                                      end: Alignment.bottomRight,
+                                                      end:
+                                                      Alignment.bottomRight,
                                                     ),
-                                                    borderRadius: BorderRadius.circular(12),
+                                                    borderRadius:
+                                                    BorderRadius.circular(
+                                                        8),
                                                   ),
-                                                  padding: const EdgeInsets.all(2), // gradient border thickness
+                                                  padding:
+                                                  const EdgeInsets.all(1.2),
                                                   child: ClipRRect(
-                                                    borderRadius: BorderRadius.circular(10),
+                                                    borderRadius:
+                                                    BorderRadius.circular(
+                                                        6),
                                                     child: BackdropFilter(
-                                                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                                                      filter:
+                                                      ImageFilter.blur(
+                                                          sigmaX: 6,
+                                                          sigmaY: 6),
                                                       child: Container(
-                                                        decoration: BoxDecoration(
-                                                          color: Colors.black.withOpacity(0.4), // translucent bg
-                                                          borderRadius: BorderRadius.circular(10),
+                                                        decoration:
+                                                        BoxDecoration(
+                                                          color: Colors.black
+                                                              .withOpacity(
+                                                              0.3),
+                                                          borderRadius:
+                                                          BorderRadius
+                                                              .circular(6),
                                                           border: Border.all(
-                                                            color: Colors.white.withOpacity(0.15),
-                                                            width: 1,
+                                                            color: Colors.white
+                                                                .withOpacity(
+                                                                0.1),
+                                                            width: 0.6,
                                                           ),
                                                         ),
                                                         child: IconButton(
                                                           icon: const Icon(
                                                             Icons.delete,
                                                             color: Colors.white,
-                                                            size: 22,
+                                                            size: 14,
                                                           ),
-                                                          onPressed: () => _removeItem(doc.id, data['title']),
-                                                          splashRadius: 26,
-                                                          tooltip: "Remove Item",
+                                                          onPressed: () async {
+                                                            await _removeItems(item['docIds'], item['title']);
+                                                          },
+                                                          splashRadius: 16,
+                                                          tooltip:
+                                                          "Remove Item",
+                                                          padding:
+                                                          EdgeInsets.zero,
+                                                          constraints:
+                                                          const BoxConstraints(
+                                                            minWidth: 26,
+                                                            minHeight: 26,
+                                                          ),
                                                         ),
                                                       ),
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-
+                                              )
                                             ],
                                           ),
                                         ],
@@ -332,14 +413,12 @@ class _CartPageState extends State<CartPage> {
                                     ),
                                   ],
                                 ),
-
                               ],
                             ),
                           ),
                         ),
                       ),
                     );
-
                   },
                 ),
               ),
@@ -366,7 +445,8 @@ class _CartPageState extends State<CartPage> {
                       children: [
                         const Text(
                           "Total",
-                          style: TextStyle(color: Colors.white70, fontSize: 14),
+                          style: TextStyle(
+                              color: Colors.white70, fontSize: 14),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -394,7 +474,8 @@ class _CartPageState extends State<CartPage> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => CheckoutPage()),
+                          MaterialPageRoute(
+                              builder: (context) => CheckoutPage()),
                         );
                       },
                       child: const Text(
@@ -416,7 +497,3 @@ class _CartPageState extends State<CartPage> {
     );
   }
 }
-
-
-
-
