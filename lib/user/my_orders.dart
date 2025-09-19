@@ -141,10 +141,11 @@ class _MyOrdersPageState extends State<MyOrdersPage>
                   final cartItems = List<Map<String, dynamic>>.from(
                     order['cartItems'] ?? [],
                   );
-                  final total = order['total'] ?? 0;
-                  final name = order['name'] ?? '';
-                  final address = order['address'] ?? '';
-                  final paymentMethod = order['paymentMethod'] ?? '';
+                  final total = (order['total'] ?? 0).toDouble();
+                  final totalWithoutDecimal = total.toInt();
+                  // final name = order['name'] ?? '';
+                  // final address = order['address'] ?? '';
+                  // final paymentMethod = order['paymentMethod'] ?? '';
                   final status = order['status'] ?? 'Pending';
                   final timestamp = order['timestamp'] as Timestamp?;
                   final orderTime = timestamp != null
@@ -224,7 +225,7 @@ class _MyOrdersPageState extends State<MyOrdersPage>
                                   ),
                                 ),
                                 Text(
-                                  "Total Amount: $total",
+                                  "Total Amount: $totalWithoutDecimal",
                                   style: const TextStyle(
                                     color: Colors.white70,
                                     fontSize: 13,
@@ -444,6 +445,7 @@ class _MyOrdersPageState extends State<MyOrdersPage>
 
 void showTrackingDetails(BuildContext context, Map<String, dynamic> orderData) {
   final name = orderData['name'] ?? '';
+  final address = orderData['address'] ?? '';
   final paymentMethod = orderData['paymentMethod'] ?? '';
   final location = orderData['location'] as Map<String, dynamic>? ?? {};
   final double lat = (location['lat'] ?? 0.0).toDouble();
@@ -458,7 +460,7 @@ void showTrackingDetails(BuildContext context, Map<String, dynamic> orderData) {
         borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-          child: SingleChildScrollView( // 🔹 Scrollable for dynamic height
+          child: SingleChildScrollView(
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -529,11 +531,11 @@ void showTrackingDetails(BuildContext context, Map<String, dynamic> orderData) {
                       TableRow(children: [
                         const Padding(
                           padding: EdgeInsets.all(6.0),
-                          child: Text("Location (Lat, Lng)", style: TextStyle(color: Colors.white70)),
+                          child: Text("Address", style: TextStyle(color: Colors.white70)),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(6.0),
-                          child: Text("$lat , $lng", style: const TextStyle(color: Colors.white)),
+                          child: Text("$address", style: const TextStyle(color: Colors.white)),
                         ),
                       ]),
                     ],
