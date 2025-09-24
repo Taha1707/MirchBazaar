@@ -17,7 +17,7 @@ const double STORE_LAT = 24.8607;  // Replace with your store's latitude
 const double STORE_LNG = 67.0011;  // Replace with your store's longitude
 
 // Delivery charges configuration
-const double BASE_CHARGE = 80.0;
+const double BASE_CHARGE = 100.0;
 const double PER_KM_CHARGE = 10.0;
 const double FREE_DELIVERY_THRESHOLD = 1.0; // 1 km
 
@@ -135,6 +135,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   LatLng? _selectedLocation;
   String? _selectedAddress;
+  String? orderStatus;
   bool _isPlacingOrder = false;
   bool _isSearching = false; // For search loading state
 
@@ -474,7 +475,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         "deliveryCharges": _deliveryCharges,
         "distanceInKm": _distanceInKm,
         "total": grandTotal,
-        "status": "Pending",
+        "status": orderStatus,
         "timestamp": FieldValue.serverTimestamp(),
         "location": {
           "lat": _selectedLocation!.latitude,
@@ -506,7 +507,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -529,7 +529,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           ),
         ),
         title: const Text(
-          "Checkout",
+          "🛒  Checkout",
           style: TextStyle(
             color: Colors.white,
             fontSize: 22,

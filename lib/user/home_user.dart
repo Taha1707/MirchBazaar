@@ -197,19 +197,7 @@ class _HomePageState extends State<HomePage>
                                         padding: EdgeInsets.zero,
                                         constraints: const BoxConstraints(),
                                       ),
-                                      const SizedBox(width: 6),
-                                      IconButton(
-                                        onPressed: () {
-                                          // TODO: Add to wishlist
-                                        },
-                                        icon: const Icon(
-                                          Icons.favorite_border,
-                                          color: Colors.orange,
-                                          size: 20,
-                                        ),
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(),
-                                      ),
+
                                     ],
                                   ),
                                 ],

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project/admin/view_product_page.dart';
 import 'package:video_player/video_player.dart';
 import 'admin_drawer.dart'; // <- reusable drawer
+import 'admin_orders_page.dart';
 
 import '../logout_page.dart';
 
@@ -132,7 +133,14 @@ class _AdminHomePageState extends State<AdminHomePage>
                         child: _featureCard(
                           icon: Icons.receipt_long,
                           title: "Orders",
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AdminOrdersPage(),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],

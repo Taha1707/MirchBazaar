@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:project/admin/home_admin.dart';
 import '../admin/view_product_page.dart';
+import 'admin_feedback_page.dart';
+import 'admin_orders_page.dart';
 import '../logout_page.dart';
 
 class AdminDrawer extends StatelessWidget {
@@ -31,9 +33,10 @@ class AdminDrawer extends StatelessWidget {
             ),
             _menuItem(context, Icons.dashboard, "Dashboard", route: AdminHomePage()),
             _menuItem(context, Icons.inventory, "Manage Products", route: ViewProductPage()),
-            _menuItem(context, Icons.receipt_long, "Orders"),
+            _menuItem(context, Icons.receipt_long, "Orders", route: AdminOrdersPage()),
             _menuItem(context, Icons.people, "Customers"),
             _menuItem(context, Icons.analytics, "Reports"),
+            _menuItem(context, Icons.rate_review, "Feedbacks", route: AdminFeedbackPage()),
             _menuItem(context, Icons.settings, "Settings"),
             _menuItem(context, Icons.logout, "Logout", isLogout: true),
           ],
