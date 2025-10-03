@@ -21,6 +21,27 @@ const double BASE_CHARGE = 100.0;
 const double PER_KM_CHARGE = 10.0;
 const double FREE_DELIVERY_THRESHOLD = 1.0; // 1 km
 
+// Karachi bounding box (approx)
+// South-West (lat, lng) and North-East (lat, lng)
+const LatLng KARACHI_SW = LatLng(24.7500, 66.6500);
+const LatLng KARACHI_NE = LatLng(25.1000, 67.4000);
+
+LatLngBounds _karachiBounds() => LatLngBounds(KARACHI_SW, KARACHI_NE);
+
+bool _isWithinKarachi(LatLng point) {
+  return _karachiBounds().contains(point);
+}
+
+LatLng _clampToKarachi(LatLng point) {
+  final minLat = KARACHI_SW.latitude;
+  final maxLat = KARACHI_NE.latitude;
+  final minLng = KARACHI_SW.longitude;
+  final maxLng = KARACHI_NE.longitude;
+  final clampedLat = point.latitude.clamp(minLat, maxLat).toDouble();
+  final clampedLng = point.longitude.clamp(minLng, maxLng).toDouble();
+  return LatLng(clampedLat, clampedLng);
+}
+
 /// Get coordinates from address using OpenStreetMap Nominatim API
 Future<LatLng?> getCoordinatesFromAddress(String address) async {
   try {
@@ -48,11 +69,14 @@ Future<LatLng?> getCoordinatesFromAddress(String address) async {
 
 /// Calculate delivery charges based on distance
 double calculateDeliveryCharges(double distanceInKm) {
-  if (distanceInKm <= FREE_DELIVERY_THRESHOLD) {
+  // Round down to whole kilometers (1.5km = 1km, 2.3km = 2km)
+  final wholeKm = distanceInKm.floor().toDouble();
+  
+  if (wholeKm <= FREE_DELIVERY_THRESHOLD) {
     return BASE_CHARGE;
   }
 
-  final extraKm = distanceInKm - FREE_DELIVERY_THRESHOLD;
+  final extraKm = wholeKm - FREE_DELIVERY_THRESHOLD;
   return BASE_CHARGE + (extraKm * PER_KM_CHARGE);
 }
 
@@ -146,6 +170,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   // Map controller for programmatic movement
   final MapController _mapController = MapController();
+  final double _minZoom = 11;
+  final double _maxZoom = 18;
 
   @override
   void initState() {
@@ -187,8 +213,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final pos = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
 
-    final latLng = LatLng(pos.latitude, pos.longitude);
-    final address = await getAddressFromCoordinates(pos.latitude, pos.longitude);
+    LatLng latLng = LatLng(pos.latitude, pos.longitude);
+    // If outside Karachi, snap to a safe default inside Karachi (e.g., Saddar)
+    if (!_isWithinKarachi(latLng)) {
+      latLng = const LatLng(24.8738, 67.0416);
+    }
+    final address = await getAddressFromCoordinates(latLng.latitude, latLng.longitude);
 
     setState(() {
       _selectedLocation = latLng;
@@ -210,6 +240,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
       final coordinates = await getCoordinatesFromAddress(query);
 
       if (coordinates != null) {
+        if (!_isWithinKarachi(coordinates)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please search a Karachi location with correct spelling.')),
+          );
+          return;
+        }
         // Move map to the searched location
         _mapController.move(coordinates, 15.0);
 
@@ -640,13 +676,32 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                   initialCenter:
                                   _selectedLocation ?? LatLng(24.8738, 67.0416),
                                   initialZoom: 13,
+                                  minZoom: _minZoom,
+                                  maxZoom: _maxZoom,
+                                  cameraConstraint: CameraConstraint.contain(
+                                    bounds: LatLngBounds(KARACHI_SW, KARACHI_NE),
+                                  ),
+                                  onMapEvent: (event) {
+                                    // Clamp any camera movement back inside Karachi
+                                    final center = event.camera.center;
+                                    if (!_isWithinKarachi(center)) {
+                                      final clamped = _clampToKarachi(center);
+                                      _mapController.move(clamped, event.camera.zoom);
+                                    }
+                                  },
                                   onTap: (tapPosition, point) async {
+                                    if (!_isWithinKarachi(point)) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Please select a location within Karachi.')),
+                                      );
+                                      return;
+                                    }
+
                                     setState(() {
                                       _selectedLocation = point;
                                     });
 
-                                    String address =
-                                    await getAddressFromCoordinates(
+                                    String address = await getAddressFromCoordinates(
                                       point.latitude,
                                       point.longitude,
                                     );
@@ -655,7 +710,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                       _selectedAddress = address;
                                     });
 
-                                    // Calculate delivery charges when map location changes
                                     _calculateDeliveryChargesFromMap();
                                   },
                                 ),

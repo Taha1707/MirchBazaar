@@ -108,6 +108,7 @@ class _MyOrdersPageState extends State<MyOrdersPage>
             stream: FirebaseFirestore.instance
                 .collection('orders')
                 .where('userId', isEqualTo: user.uid)
+                .orderBy('timestamp', descending: true)
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {

@@ -1,0 +1,73 @@
+// Firestore Security Rules - Updated with Bug Reports
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Products
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Cart — only the logged-in user can access their own cart (+ items)
+    match /carts/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+
+      match /items/{itemId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
+    }
+
+    // Orders
+    // - Users: can create and read/update/delete their own orders
+    // - Admin: can read/update/delete any order (needed for Admin Orders page)
+    match /orders/{orderId} {
+      allow create: if isSignedIn();
+
+      allow read: if isAdmin() ||
+                  (isSignedIn() && request.auth.uid == resource.data.userId);
+
+      allow update, delete: if isAdmin() ||
+                            (isSignedIn() && request.auth.uid == resource.data.userId);
+    }
+
+    // Users
+    // - User can read/update own profile
+    // - Admin can read/update any user
+    match /users/{userId} {
+      allow create: if isSignedIn();
+      allow read, update: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+    }
+
+    // Feedbacks — logged-in users can add, everyone can read
+    // Added: Admin can delete any feedback
+    match /feedbacks/{feedbackId} {
+      allow create: if isSignedIn();
+      allow read: if true;
+      allow delete: if isAdmin();
+    }
+
+    // Bug Reports — Simple and Clean Rules
+    // - Users: can create bug reports and read their own
+    // - Admin: can read all, update status, and delete
+    match /bug_reports/{bugId} {
+      allow create: if isSignedIn();
+      
+      allow read: if isAdmin() || 
+                  (isSignedIn() && request.auth.uid == resource.data.userId);
+      
+      allow update: if isAdmin();
+      
+      allow delete: if isAdmin();
+    }
+  }
+}

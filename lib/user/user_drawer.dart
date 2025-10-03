@@ -6,6 +6,7 @@ import 'package:project/user/product_page.dart';
 import 'package:project/user/about_us.dart';
 import '../logout_page.dart';
 import '../admin/view_product_page.dart'; // example route for navigation
+import 'bug_report_page.dart';
 
 class UserDrawer extends StatelessWidget {
   final Function(String) onMenuItemSelected;
@@ -41,6 +42,7 @@ class UserDrawer extends StatelessWidget {
             _menuItem(context, Icons.contact_support, "Support"),
             _menuItem(context, Icons.question_mark_sharp, "About", route: AboutUsPage()),
             _menuItem(context, Icons.feedback, "Feedback" , route: FeedbackFormPage()),
+            _menuItem(context, Icons.bug_report, "Report a Bug" , route: BugReportPage()),
             _menuItem(context, Icons.logout, "Logout", isLogout: true),
           ],
         ),
