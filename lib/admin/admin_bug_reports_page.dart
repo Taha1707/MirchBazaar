@@ -243,8 +243,11 @@ class _AdminBugReportsPageState extends State<AdminBugReportsPage>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withOpacity(0.1),
-                  Colors.white.withOpacity(0.05),
+                  Colors.orange.withOpacity(0.2),
+                  Colors.red.withOpacity(0.2),
+                  Colors.yellow.withOpacity(0.2),
+                  // Colors.orange.withOpacity(0.1),
+                  // Colors.yellow.withOpacity(0.08),
                 ],
               ),
               borderRadius: BorderRadius.circular(16),

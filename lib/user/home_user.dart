@@ -8,6 +8,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:project/user/product_detail_page.dart'; // 👈 import detail page
 import 'package:project/user/product_page.dart';
 import 'package:project/user/user_drawer.dart'; // 👈 custom drawer import
+import 'package:project/user/cart_page.dart';
+import 'package:project/user/bug_report_page.dart';
+import 'package:project/user/edit_profile_page.dart';
 import '../logout_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -432,6 +435,14 @@ class _HomePageState extends State<HomePage>
               );
             },
           ),
+
+          // Bottom Navigation (visible only on Home)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _HomeBottomBar(),
+          ),
         ],
       ),
     );
@@ -508,6 +519,115 @@ Widget _buildFeature(IconData icon, String label) {
   );
 }
 
+
+class _HomeBottomBar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Colors.black, Colors.black],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        border: Border(
+          top: BorderSide(color: Colors.white.withOpacity(0.12), width: 1),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.4),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _NavItem(
+              icon: Icons.home_filled,
+              label: 'Home',
+              isActive: true,
+              onTap: () {},
+            ),
+            _NavItem(
+              icon: Icons.shopping_cart_outlined,
+              label: 'Cart',
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const CartPage()));
+              },
+            ),
+            _NavItem(
+              icon: Icons.edit,
+              label: 'Edit Profile',
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfilePage()));
+              },
+            ),
+            _NavItem(
+              icon: Icons.bug_report_outlined,
+              label: 'Bug Report',
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const BugReportPage()));
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool isActive;
+
+  const _NavItem({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.isActive = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          // gradient: isActive
+          //     ? const LinearGradient(colors: [Color(0xFFE65100), Color(0xFFB71C1C), Color(0xFFF9A825)])
+          //     : null,
+          color: /*isActive ? null :*/ Colors.white.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withOpacity(0.15)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.orange, size: 22),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class SpiceometerBanner extends StatelessWidget {
   const SpiceometerBanner({super.key});

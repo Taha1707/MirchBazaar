@@ -168,9 +168,25 @@ class _BugReportPageState extends State<BugReportPage>
             color: Colors.white,
           ),
         ),
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(width: 1.5, color: Colors.white24),
+          ),
+          child: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.white,
+              size: 18,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
         centerTitle: true,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+
       ),
       body: Stack(
         children: [
@@ -360,13 +376,13 @@ class _BugReportPageState extends State<BugReportPage>
                                   const SizedBox(height: 24),
 
                                   // Screenshot Section
-                                  _buildSectionHeader('Screenshot (Optional)', Icons.image),
-                                  const SizedBox(height: 12),
-                                  _buildTextField(
-                          controller: _screenshotUrlController,
-                                    hint: 'Paste image URL or link',
-                                    icon: Icons.image_outlined,
-                        ),
+                        //           _buildSectionHeader('Screenshot (Optional)', Icons.image),
+                        //           const SizedBox(height: 12),
+                        //           _buildTextField(
+                        //   controller: _screenshotUrlController,
+                        //             hint: 'Paste image URL or link',
+                        //             icon: Icons.image_outlined,
+                        // ),
 
                                   const SizedBox(height: 32),
 

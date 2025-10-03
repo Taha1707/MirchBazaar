@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -33,6 +34,8 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
   @override
   void dispose() {
     _controller.dispose();
+    _emailController.dispose();
+    _messageController.dispose();
     super.dispose();
   }
 
@@ -50,6 +53,18 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
 
     if (!_formKey.currentState!.validate()) return;
 
+    if (_rating == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please provide a rating'),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
+
     setState(() => _isSending = true);
 
     final feedbackData = {
@@ -65,8 +80,10 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('✅ Feedback submitted successfully!'),
-          backgroundColor: Colors.orange,
+          content: Text('Feedback submitted successfully!'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
 
@@ -79,8 +96,10 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('❌ Failed to send feedback. Please try again.'),
+          content: Text('Failed to send feedback. Please try again.'),
           backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -101,13 +120,14 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
 
   Widget _buildStarRating() {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(5, (index) {
         final starIndex = index + 1;
         return IconButton(
           icon: Icon(
             _rating >= starIndex ? Icons.star : Icons.star_border,
             color: Colors.orange,
-            size: 28,
+            size: 32,
           ),
           onPressed: () {
             setState(() => _rating = starIndex);
@@ -117,35 +137,37 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
     );
   }
 
-  Widget _sectionHeading(String title) {
-    return Column(
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Row(
       children: [
-        Text(
-          title,
-          style: GoogleFonts.playfairDisplay(
-            textStyle: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.1),
             ),
           ),
+          child: Icon(icon, color: Colors.orange, size: 18),
         ),
-        const SizedBox(height: 6),
-        Container(
-          height: 3,
-          width: 80,
-          decoration: BoxDecoration(
-            color: Colors.orange,
-            borderRadius: BorderRadius.circular(10),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: GoogleFonts.poppins(
+            textStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildThemedTextField({
-    required String hintText,
+  Widget _buildTextField({
+    required String hint,
     required IconData icon,
     TextEditingController? controller,
     String? initialValue,
@@ -153,142 +175,166 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
     int maxLines = 1,
     String? Function(String?)? validator,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.orange.withOpacity(0.4)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
+    return TextFormField(
+      controller: controller,
+      initialValue: initialValue,
+      enabled: enabled,
+      maxLines: maxLines,
+      validator: validator,
+      style: GoogleFonts.poppins(
+        textStyle: TextStyle(
+          color: enabled ? Colors.white : Colors.white.withOpacity(0.5),
+          fontSize: 16,
+        ),
       ),
-      child: TextFormField(
-        controller: controller,
-        initialValue: initialValue,
-        enabled: enabled,
-        maxLines: maxLines,
-        validator: validator,
-        style: GoogleFonts.poppins(
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.black.withOpacity(0.3),
+        prefixIcon: maxLines > 1
+            ? Padding(
+          padding: const EdgeInsets.only(bottom: 60),
+          child: Icon(icon, color: Colors.orange),
+        )
+            : Icon(icon, color: enabled ? Colors.orange : Colors.white.withOpacity(0.3)),
+        hintText: hint,
+        hintStyle: GoogleFonts.poppins(
           textStyle: TextStyle(
-            color: enabled ? Colors.white : Colors.white54,
-            fontSize: 16,
+            color: Colors.white.withOpacity(0.5),
+            fontSize: 14,
           ),
         ),
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: GoogleFonts.poppins(
-            textStyle: const TextStyle(
-              color: Colors.white38,
-              fontSize: 16,
-            ),
-          ),
-          prefixIcon: maxLines > 1
-              ? Padding(
-            padding: const EdgeInsets.only(bottom: 48),
-            child: Icon(icon, color: Colors.orange),
-          )
-              : Icon(icon, color: Colors.orange),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.orange, width: 2),
-          ),
-          disabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.orange, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
   }
 
-  Widget _buildThemedDropdown() {
+  Widget _buildDropdown() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.orange.withOpacity(0.4)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        color: Colors.black.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
       ),
       child: DropdownButtonFormField<String>(
         value: _feedbackType,
-        dropdownColor: Colors.grey[800],
+        dropdownColor: const Color(0xFF1A1A1A),
         style: GoogleFonts.poppins(
-          textStyle: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-          ),
+          textStyle: const TextStyle(color: Colors.white, fontSize: 16),
         ),
         decoration: InputDecoration(
-          hintText: "Select Feedback Type",
-          hintStyle: GoogleFonts.poppins(
-            textStyle: const TextStyle(
-              color: Colors.white38,
-              fontSize: 16,
-            ),
-          ),
-          prefixIcon: Icon(Icons.category_outlined, color: Colors.orange),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.orange, width: 2),
-          ),
-          contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          prefixIcon: const Icon(Icons.category_outlined, color: Colors.orange),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
         items: [
           'Overall Experience',
           'Product Quality',
           'Service & Support',
           'Ease of Use'
-        ]
-            .map(
-              (type) => DropdownMenuItem(
+        ].map((type) {
+          return DropdownMenuItem(
             value: type,
-            child: Text(
-              type,
-              style: GoogleFonts.poppins(
-                textStyle: const TextStyle(
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        )
-            .toList(),
+            child: Text(type),
+          );
+        }).toList(),
         onChanged: (val) {
           if (val != null) {
             setState(() => _feedbackType = val);
           }
         },
+      ),
+    );
+  }
+
+  Widget _buildGradientButton({required String text, required VoidCallback onTap}) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Colors.orange, Colors.red, Colors.yellow],
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            letterSpacing: 2,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingButton() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.orange.withOpacity(0.6),
+            Colors.red.withOpacity(0.6),
+            Colors.yellow.withOpacity(0.6),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'SUBMITTING...',
+            style: const TextStyle(
+              fontSize: 16,
+              letterSpacing: 2,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -302,13 +348,11 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: _controller != null
-              ? AnimatedIcon(
+          icon: AnimatedIcon(
             icon: AnimatedIcons.menu_close,
             progress: _controller,
             color: Colors.white,
-          )
-              : Icon(Icons.menu, color: Colors.white),
+          ),
           onPressed: _toggleMenu,
         ),
       ),
@@ -317,7 +361,8 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
           SingleChildScrollView(
             child: Column(
               children: [
-                // Hero Section with Glass Card
+                // Hero Section with Banner - UNCHANGED
+                SizedBox(height: 10,),
                 Stack(
                   children: [
                     Container(
@@ -344,8 +389,7 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.08),
                             borderRadius: BorderRadius.circular(18),
-                            border:
-                            Border.all(color: Colors.orange.withOpacity(0.4)),
+                            border: Border.all(color: Colors.orange.withOpacity(0.4)),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.4),
@@ -357,7 +401,7 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.feedback, size: 50, color: Colors.orange),
+                              const Icon(Icons.feedback, size: 50, color: Colors.orange),
                               const SizedBox(height: 14),
                               Text(
                                 "We Value Your Feedback",
@@ -372,7 +416,7 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                "Help us improve MirchBazaar with your thoughts and suggestions ✨",
+                                "Help us improve MirchBazaar with your thoughts and suggestions",
                                 style: GoogleFonts.poppins(
                                   textStyle: const TextStyle(
                                     fontSize: 14,
@@ -389,121 +433,101 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
                     ),
                   ],
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 24),
 
-                // Feedback Form Section
-                _sectionHeading("Share Your Experience"),
+                // Form Section with Glassmorphism
                 Padding(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4, bottom: 8),
-                          child: Text(
-                            "⚠️ Your email cannot be edited!",
-                            style: GoogleFonts.poppins(
-                              textStyle: TextStyle(
-                                color: Colors.red.shade400,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
-                            ),
+                  padding: const EdgeInsets.all(20),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white.withOpacity(0.1),
+                              Colors.white.withOpacity(0.05),
+                            ],
                           ),
-                        ),
-
-                        _buildThemedTextField(
-                          hintText: "Email Address",
-                          icon: Icons.email_outlined,
-                          initialValue:
-                          FirebaseAuth.instance.currentUser?.email ?? 'No Email',
-                          enabled: false,
-                        ),
-
-                        _buildThemedDropdown(),
-
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4, bottom: 8),
-                          child: Text(
-                            "Rate Your Experience",
-                            style: GoogleFonts.poppins(
-                              textStyle: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
-                              ),
-                            ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
+                            width: 1.5,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.5),
+                              blurRadius: 20,
+                              spreadRadius: 2,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
                         ),
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 20),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.orange.withOpacity(0.4)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.4),
-                                blurRadius: 12,
-                                offset: const Offset(0, 6),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildSectionHeader('Email Address', Icons.email_outlined),
+                              const SizedBox(height: 12),
+                              _buildTextField(
+                                hint: 'Email Address',
+                                icon: Icons.email_outlined,
+                                initialValue: FirebaseAuth.instance.currentUser?.email ?? 'No Email',
+                                enabled: false,
+                              ),
+
+                              const SizedBox(height: 24),
+
+                              _buildSectionHeader('Feedback Category', Icons.category),
+                              const SizedBox(height: 12),
+                              _buildDropdown(),
+
+                              const SizedBox(height: 24),
+
+                              _buildSectionHeader('Rate Your Experience', Icons.star),
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.03),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                                ),
+                                child: _buildStarRating(),
+                              ),
+
+                              const SizedBox(height: 24),
+
+                              _buildSectionHeader('Your Feedback', Icons.message),
+                              const SizedBox(height: 12),
+                              _buildTextField(
+                                hint: 'Describe your feedback or suggestions...',
+                                icon: Icons.message_outlined,
+                                controller: _messageController,
+                                maxLines: 5,
+                                validator: validateMessage,
+                              ),
+
+                              const SizedBox(height: 32),
+
+                              SizedBox(
+                                width: double.infinity,
+                                child: _isSending
+                                    ? _buildLoadingButton()
+                                    : _buildGradientButton(
+                                  text: "SUBMIT FEEDBACK",
+                                  onTap: _submitFeedback,
+                                ),
                               ),
                             ],
                           ),
-                          child: _buildStarRating(),
                         ),
-
-                        _buildThemedTextField(
-                          hintText: "Describe your feedback or suggestions...",
-                          icon: Icons.message_outlined,
-                          controller: _messageController,
-                          maxLines: 5,
-                          validator: validateMessage,
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton.icon(
-                            onPressed: _isSending ? null : _submitFeedback,
-                            icon: _isSending
-                                ? SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                                : Icon(Icons.send_rounded, color: Colors.white),
-                            label: Text(
-                              _isSending ? "Sending..." : "Send Feedback",
-                              style: GoogleFonts.poppins(
-                                textStyle: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 1,
-                                ),
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
-                              elevation: 8,
-                              shadowColor: Colors.orange.withOpacity(0.4),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -530,7 +554,6 @@ class _FeedbackFormPageState extends State<FeedbackFormPage>
   }
 
   void clearData() {
-    _emailController.clear();
     _messageController.clear();
   }
 }
