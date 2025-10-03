@@ -71,7 +71,7 @@ Future<LatLng?> getCoordinatesFromAddress(String address) async {
 double calculateDeliveryCharges(double distanceInKm) {
   // Round down to whole kilometers (1.5km = 1km, 2.3km = 2km)
   final wholeKm = distanceInKm.floor().toDouble();
-  
+
   if (wholeKm <= FREE_DELIVERY_THRESHOLD) {
     return BASE_CHARGE;
   }
@@ -596,16 +596,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
             );
           }
 
-          // Grouping Logic
+          // Grouping Logic (preserving blend info)
           Map<String, Map<String, dynamic>> groupedItems = {};
           for (var item in rawCartItems) {
             final key = "${item['title']}_${item['selectedWeight']}";
+            final isBlend = item['isBlend'] ?? false;
+
             if (!groupedItems.containsKey(key)) {
               groupedItems[key] = {
                 "title": item["title"],
                 "selectedWeight": item["selectedWeight"],
                 "quantity": (item["quantity"] ?? 0),
                 "unitPrice": item["unitPrice"],
+                "isBlend": isBlend,
+                "blendDescription": item["blendDescription"],
+                "blendDetails": item["blendDetails"],
               };
             } else {
               groupedItems[key]!["quantity"] += (item["quantity"] ?? 0);
@@ -866,6 +871,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                     children:
                                     List.generate(cartItems.length, (index) {
                                       final item = cartItems[index];
+                                      final isBlend = item['isBlend'] ?? false;
+                                      final blendDetails = item['blendDetails'];
+
                                       return Container(
                                         margin: const EdgeInsets.symmetric(
                                           horizontal: 12,
@@ -876,43 +884,149 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                           color: Colors.white.withOpacity(0.06),
                                           borderRadius: BorderRadius.circular(14),
                                           border: Border.all(
-                                            color: Colors.white.withOpacity(0.1),
+                                            color: isBlend
+                                                ? Colors.deepPurple.withOpacity(0.3)
+                                                : Colors.white.withOpacity(0.1),
                                           ),
                                         ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Column(
-                                              crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                            Row(
+                                              mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                               children: [
-                                                Text(
-                                                  item["title"] ?? "",
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          Flexible(
+                                                            child: Text(
+                                                              item["title"] ?? "",
+                                                              style: const TextStyle(
+                                                                color: Colors.white,
+                                                                fontSize: 16,
+                                                                fontWeight: FontWeight.w600,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          if (isBlend) ...[
+                                                            const SizedBox(width: 6),
+                                                            Container(
+                                                              padding: const EdgeInsets.symmetric(
+                                                                horizontal: 6,
+                                                                vertical: 2,
+                                                              ),
+                                                              decoration: BoxDecoration(
+                                                                gradient: const LinearGradient(
+                                                                  colors: [Colors.deepPurple, Colors.purple],
+                                                                ),
+                                                                borderRadius: BorderRadius.circular(6),
+                                                              ),
+                                                              child: const Text(
+                                                                "BLEND",
+                                                                style: TextStyle(
+                                                                  fontSize: 9,
+                                                                  fontWeight: FontWeight.bold,
+                                                                  color: Colors.white,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ],
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        "Qty: ${item["quantity"] ?? 0} • ${item["selectedWeight"] ?? ""}",
+                                                        style: const TextStyle(
+                                                          color: Colors.white70,
+                                                          fontSize: 13,
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
                                                 ),
-                                                const SizedBox(height: 4),
                                                 Text(
-                                                  "Qty: ${item["quantity"] ?? 0} • ${item["selectedWeight"] ?? ""}",
+                                                  "Rs. ${(item["quantity"] ?? 0) * (item["unitPrice"] ?? 0)}",
                                                   style: const TextStyle(
-                                                    color: Colors.white70,
-                                                    fontSize: 13,
+                                                    color: Colors.orangeAccent,
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
                                               ],
                                             ),
-                                            Text(
-                                              "Rs. ${(item["quantity"] ?? 0) * (item["unitPrice"] ?? 0)}",
-                                              style: const TextStyle(
-                                                color: Colors.orangeAccent,
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.bold,
+
+                                            // Show blend ingredients
+                                            if (isBlend && blendDetails != null && blendDetails is List && blendDetails.isNotEmpty) ...[
+                                              const SizedBox(height: 8),
+                                              Container(
+                                                padding: const EdgeInsets.all(10),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.deepPurple.withOpacity(0.1),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(
+                                                    color: Colors.deepPurple.withOpacity(0.3),
+                                                    width: 1,
+                                                  ),
+                                                ),
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.blender,
+                                                          color: Colors.purple.shade300,
+                                                          size: 14,
+                                                        ),
+                                                        const SizedBox(width: 6),
+                                                        Text(
+                                                          "Blend Contains:",
+                                                          style: TextStyle(
+                                                            color: Colors.purple.shade200,
+                                                            fontSize: 12,
+                                                            fontWeight: FontWeight.w600,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 6),
+                                                    ...List.generate(blendDetails.length, (i) {
+                                                      final detail = blendDetails[i];
+                                                      return Padding(
+                                                        padding: const EdgeInsets.only(left: 20, top: 3),
+                                                        child: Row(
+                                                          children: [
+                                                            Container(
+                                                              width: 4,
+                                                              height: 4,
+                                                              decoration: BoxDecoration(
+                                                                color: Colors.orange.shade300,
+                                                                shape: BoxShape.circle,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(width: 8),
+                                                            Expanded(
+                                                              child: Text(
+                                                                "${detail['title']} - ${detail['weightInGrams']?.toInt() ?? 0}g",
+                                                                style: TextStyle(
+                                                                  color: Colors.orange.shade200,
+                                                                  fontSize: 11,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                    }),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
+                                            ],
                                           ],
                                         ),
                                       );
