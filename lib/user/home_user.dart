@@ -355,46 +355,28 @@ class _HomePageState extends State<HomePage>
 // ✅ Responsive Spice Features Section (Centered)
                 Center(
                   child: Transform.scale(
-                    scale: 0.9, // 👈 is value ko adjust karo (0.8 - 0.95) jitna chhota chahiye
+                    scale: 0.9,
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 800), // keeps it neat on big screens
+                      constraints: const BoxConstraints(maxWidth: 800),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            if (constraints.maxWidth > 600) {
-                              // ✅ For wider screens → row layout
-                              return Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Expanded(child: _buildFeature(Icons.local_fire_department, "Hot & Spicy")),
-                                  Expanded(child: _buildFeature(Icons.eco, "Natural & Pure")),
-                                  Expanded(child: _buildFeature(Icons.restaurant, "Perfect Taste")),
-                                  Expanded(child: _buildFeature(Icons.spa, "Aromatic")),
-                                ],
-                              );
-                            } else {
-                              // ✅ For small screens → auto-wrap
-                              return Wrap(
-                                spacing: 24,
-                                runSpacing: 20,
-                                alignment: WrapAlignment.center, // ✅ center align features
-                                children: [
-                                  _buildFeature(Icons.local_fire_department, "Hot & Spicy"),
-                                  _buildFeature(Icons.eco, "Natural & Pure"),
-                                  _buildFeature(Icons.restaurant, "Perfect Taste"),
-                                  _buildFeature(Icons.spa, "Aromatic"),
-                                ],
-                              );
-                            }
-                          },
+                        child: GridView.count(
+                          shrinkWrap: true,
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 2,
+                          mainAxisSpacing: 2,
+                          childAspectRatio: 1.3,
+                          children: [
+                            _buildFeature(Icons.local_fire_department, "Hot & Spicy"),
+                            _buildFeature(Icons.eco, "Natural & Pure"),
+                            _buildFeature(Icons.restaurant, "Perfect Taste"),
+                            _buildFeature(Icons.spa, "Aromatic"),
+                          ],
                         ),
                       ),
                     ),
                   ),
                 ),
-
-
 
                 const SizedBox(height: 20),
 
