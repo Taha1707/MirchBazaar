@@ -103,16 +103,16 @@ class _HomePageState extends State<HomePage>
                   scrollDirection: Axis.horizontal,
                   itemCount: products.length,
                   itemBuilder: (context, index) {
-                    final data =
-                    products[index].data() as Map<String, dynamic>;
+                    final data = products[index].data() as Map<String, dynamic>;
 
                     return InkWell(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                                ProductDetailPage(product: data), // 👈 go to detail page
+                            builder: (_) => ProductDetailPage(
+                              product: data,
+                            ), // 👈 go to detail page
                           ),
                         );
                       },
@@ -132,20 +132,21 @@ class _HomePageState extends State<HomePage>
                                 borderRadius: const BorderRadius.vertical(
                                   top: Radius.circular(16),
                                 ),
-                                child: (data['image'] != null &&
-                                    data['image'].toString().isNotEmpty)
+                                child:
+                                    (data['image'] != null &&
+                                        data['image'].toString().isNotEmpty)
                                     ? Image.memory(
-                                  base64Decode(data['image']),
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                )
+                                        base64Decode(data['image']),
+                                        fit: BoxFit.cover,
+                                        width: double.infinity,
+                                      )
                                     : const Center(
-                                  child: Icon(
-                                    Icons.image_not_supported,
-                                    color: Colors.white54,
-                                    size: 40,
-                                  ),
-                                ),
+                                        child: Icon(
+                                          Icons.image_not_supported,
+                                          color: Colors.white54,
+                                          size: 40,
+                                        ),
+                                      ),
                               ),
                             ),
 
@@ -153,8 +154,9 @@ class _HomePageState extends State<HomePage>
 
                             // Product Name
                             Padding(
-                              padding:
-                              const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
                               child: Text(
                                 data['title'] ?? "No Name",
                                 style: const TextStyle(
@@ -176,7 +178,7 @@ class _HomePageState extends State<HomePage>
                               ),
                               child: Row(
                                 mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     "Rs ${data['pricePer250g'] ?? 0}",
@@ -200,7 +202,6 @@ class _HomePageState extends State<HomePage>
                                         padding: EdgeInsets.zero,
                                         constraints: const BoxConstraints(),
                                       ),
-
                                     ],
                                   ),
                                 ],
@@ -290,8 +291,8 @@ class _HomePageState extends State<HomePage>
                         const SizedBox(height: 10),
                         Text(
                           "Discover the finest collection\n"
-                              "of spices, masalas\n"
-                              "and authentic ingredients!",
+                          "of spices, masalas\n"
+                          "and authentic ingredients!",
                           style: GoogleFonts.poppins(
                             textStyle: const TextStyle(
                               color: Colors.white70,
@@ -308,9 +309,17 @@ class _HomePageState extends State<HomePage>
                           ),
                         ),
                         const SizedBox(height: 15),
-                        _buildGradientButton(text: "Shop Now", onTap: () {
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => UserProductPage()));
-                        }),
+                        _buildGradientButton(
+                          text: "Shop Now",
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UserProductPage(),
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -352,26 +361,66 @@ class _HomePageState extends State<HomePage>
                   ),
                 ),
 
-// ✅ Responsive Spice Features Section (Centered)
+                // ✅ Responsive Spice Features Section (Centered)
                 Center(
                   child: Transform.scale(
                     scale: 0.9,
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 800),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-                        child: GridView.count(
-                          shrinkWrap: true,
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 2,
-                          mainAxisSpacing: 2,
-                          childAspectRatio: 1.3,
-                          children: [
-                            _buildFeature(Icons.local_fire_department, "Hot & Spicy"),
-                            _buildFeature(Icons.eco, "Natural & Pure"),
-                            _buildFeature(Icons.restaurant, "Perfect Taste"),
-                            _buildFeature(Icons.spa, "Aromatic"),
-                          ],
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 20,
+                          horizontal: 16,
+                        ),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            if (constraints.maxWidth > 600) {
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: _buildFeature(
+                                      Icons.local_fire_department,
+                                      "Hot & Spicy",
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: _buildFeature(
+                                      Icons.eco,
+                                      "Natural & Pure",
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: _buildFeature(
+                                      Icons.restaurant,
+                                      "Perfect Taste",
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: _buildFeature(Icons.spa, "Aromatic"),
+                                  ),
+                                ],
+                              );
+                            } else {
+                              return Wrap(
+                                spacing: 24,
+                                runSpacing: 20,
+                                alignment: WrapAlignment.center,
+                                children: [
+                                  _buildFeature(
+                                    Icons.local_fire_department,
+                                    "Hot & Spicy",
+                                  ),
+                                  _buildFeature(Icons.eco, "Natural & Pure"),
+                                  _buildFeature(
+                                    Icons.restaurant,
+                                    "Perfect Taste",
+                                  ),
+                                  _buildFeature(Icons.spa, "Aromatic"),
+                                ],
+                              );
+                            }
+                          },
                         ),
                       ),
                     ),
@@ -381,7 +430,6 @@ class _HomePageState extends State<HomePage>
                 const SizedBox(height: 20),
 
                 // 🔹 Categories + Products
-
                 _buildCategory("Daily Cooking Masalas", "روزانہ کے مصالحے"),
                 const SizedBox(height: 20),
                 const SpiceometerBanner(),
@@ -398,11 +446,8 @@ class _HomePageState extends State<HomePage>
                 const SizedBox(height: 30),
                 const TestimonialSection(),
               ],
-
             ),
-
           ),
-
 
           // ✅ Replaced with UserDrawer
           AnimatedBuilder(
@@ -423,18 +468,11 @@ class _HomePageState extends State<HomePage>
           ),
 
           // Bottom Navigation (visible only on Home)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _HomeBottomBar(),
-          ),
+          Positioned(left: 0, right: 0, bottom: 0, child: _HomeBottomBar()),
         ],
       ),
     );
   }
-
-
 
   Widget _buildGradientButton({
     required String text,
@@ -471,7 +509,6 @@ class _HomePageState extends State<HomePage>
   }
 }
 
-
 Widget _buildFeature(IconData icon, String label) {
   return Column(
     mainAxisSize: MainAxisSize.min,
@@ -485,11 +522,7 @@ Widget _buildFeature(IconData icon, String label) {
           shape: BoxShape.circle,
           border: Border.all(color: Colors.orange, width: 1.5),
         ),
-        child: Icon(
-          icon,
-          size: 22,
-          color: Colors.orange,
-        ),
+        child: Icon(icon, size: 22, color: Colors.orange),
       ),
       const SizedBox(height: 8),
       Text(
@@ -504,7 +537,6 @@ Widget _buildFeature(IconData icon, String label) {
     ],
   );
 }
-
 
 class _HomeBottomBar extends StatelessWidget {
   @override
@@ -543,21 +575,30 @@ class _HomeBottomBar extends StatelessWidget {
               icon: Icons.shopping_cart_outlined,
               label: '',
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const CartPage()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CartPage()),
+                );
               },
             ),
             _NavItem(
               icon: Icons.edit,
               label: '',
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfilePage()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EditProfilePage()),
+                );
               },
             ),
             _NavItem(
               icon: Icons.bug_report_outlined,
               label: '',
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const BugReportPage()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BugReportPage()),
+                );
               },
             ),
           ],
@@ -710,9 +751,6 @@ class SpiceometerBanner extends StatelessWidget {
   }
 }
 
-
-
-
 class MixBlendBanner extends StatelessWidget {
   const MixBlendBanner({super.key});
 
@@ -807,16 +845,10 @@ class MixBlendBanner extends StatelessWidget {
             ),
           ),
         ),
-
       ],
     );
   }
 }
-
-
-
-
-
 
 class TestimonialSection extends StatefulWidget {
   const TestimonialSection({super.key});
@@ -873,7 +905,9 @@ class _TestimonialSectionState extends State<TestimonialSection> {
         if (!uniqueEmails.contains(email)) {
           uniqueEmails.add(email);
           testimonials.add({
-            'name': email.split('@')[0], // Use email username as name (or store name in DB)
+            'name': email.split(
+              '@',
+            )[0], // Use email username as name (or store name in DB)
             'role': data['type'] ?? 'Customer',
             'gender': 'male', // Optional: can be dynamic if you store gender
             'review': data['message'] ?? '',
@@ -893,9 +927,7 @@ class _TestimonialSectionState extends State<TestimonialSection> {
   Widget build(BuildContext context) {
     if (_testimonials.isEmpty) {
       return const Center(
-        child: CircularProgressIndicator(
-          color: Colors.orange,
-        ),
+        child: CircularProgressIndicator(color: Colors.orange),
       );
     }
 
@@ -963,7 +995,7 @@ class _TestimonialSectionState extends State<TestimonialSection> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
             _testimonials.length,
-                (i) => AnimatedContainer(
+            (i) => AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
               width: _activeIndex == i ? 18 : 8,
@@ -979,6 +1011,7 @@ class _TestimonialSectionState extends State<TestimonialSection> {
     );
   }
 }
+
 class _TestimonialCard extends StatelessWidget {
   final Map<String, String> data;
   final bool isActive;
@@ -1061,32 +1094,32 @@ class _TestimonialCard extends StatelessWidget {
               Expanded(
                 child: isActive
                     ? SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Text(
-                    '"${data['review']!}"',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w400,
-                      height: 1.5,
-                      decoration: TextDecoration.none,
-                    ),
-                  ),
-                )
+                        physics: const BouncingScrollPhysics(),
+                        child: Text(
+                          '"${data['review']!}"',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w400,
+                            height: 1.5,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                      )
                     : Text(
-                  '"${data['review']!}"',
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 3,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w400,
-                    height: 1.5,
-                    decoration: TextDecoration.none,
-                  ),
-                ),
+                        '"${data['review']!}"',
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 3,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w400,
+                          height: 1.5,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
               ),
 
               // 🔹 Small gap before name
