@@ -354,45 +354,49 @@ class _HomePageState extends State<HomePage>
 
 // ✅ Responsive Spice Features Section (Centered)
                 Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 800), // keeps it neat on big screens
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          if (constraints.maxWidth > 600) {
-                            // ✅ For wider screens → row layout
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Expanded(child: _buildFeature(Icons.local_fire_department, "Hot & Spicy")),
-                                Expanded(child: _buildFeature(Icons.eco, "Natural & Pure")),
-                                Expanded(child: _buildFeature(Icons.restaurant, "Perfect Taste")),
-                                Expanded(child: _buildFeature(Icons.spa, "Aromatic")),
-                              ],
-                            );
-                          } else {
-                            // ✅ For small screens → auto-wrap
-                            return Wrap(
-                              spacing: 24,
-                              runSpacing: 20,
-                              alignment: WrapAlignment.center, // ✅ center align features
-                              children: [
-                                _buildFeature(Icons.local_fire_department, "Hot & Spicy"),
-                                _buildFeature(Icons.eco, "Natural & Pure"),
-                                _buildFeature(Icons.restaurant, "Perfect Taste"),
-                                _buildFeature(Icons.spa, "Aromatic"),
-                              ],
-                            );
-                          }
-                        },
+                  child: Transform.scale(
+                    scale: 0.9, // 👈 is value ko adjust karo (0.8 - 0.95) jitna chhota chahiye
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 800), // keeps it neat on big screens
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            if (constraints.maxWidth > 600) {
+                              // ✅ For wider screens → row layout
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Expanded(child: _buildFeature(Icons.local_fire_department, "Hot & Spicy")),
+                                  Expanded(child: _buildFeature(Icons.eco, "Natural & Pure")),
+                                  Expanded(child: _buildFeature(Icons.restaurant, "Perfect Taste")),
+                                  Expanded(child: _buildFeature(Icons.spa, "Aromatic")),
+                                ],
+                              );
+                            } else {
+                              // ✅ For small screens → auto-wrap
+                              return Wrap(
+                                spacing: 24,
+                                runSpacing: 20,
+                                alignment: WrapAlignment.center, // ✅ center align features
+                                children: [
+                                  _buildFeature(Icons.local_fire_department, "Hot & Spicy"),
+                                  _buildFeature(Icons.eco, "Natural & Pure"),
+                                  _buildFeature(Icons.restaurant, "Perfect Taste"),
+                                  _buildFeature(Icons.spa, "Aromatic"),
+                                ],
+                              );
+                            }
+                          },
+                        ),
                       ),
                     ),
                   ),
                 ),
 
 
-    const SizedBox(height: 20),
+
+                const SizedBox(height: 20),
 
                 // 🔹 Categories + Products
 
@@ -545,31 +549,31 @@ class _HomeBottomBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _NavItem(
               icon: Icons.home_filled,
-              label: 'Home',
+              label: '',
               isActive: true,
               onTap: () {},
             ),
             _NavItem(
               icon: Icons.shopping_cart_outlined,
-              label: 'Cart',
+              label: '',
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const CartPage()));
               },
             ),
             _NavItem(
               icon: Icons.edit,
-              label: 'Edit Profile',
+              label: '',
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfilePage()));
               },
             ),
             _NavItem(
               icon: Icons.bug_report_outlined,
-              label: 'Bug Report',
+              label: '',
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const BugReportPage()));
               },
@@ -612,7 +616,6 @@ class _NavItem extends StatelessWidget {
         child: Row(
           children: [
             Icon(icon, color: Colors.orange, size: 22),
-            const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(

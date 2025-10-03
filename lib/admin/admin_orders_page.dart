@@ -161,9 +161,9 @@ class _AdminOrdersPageState extends State<AdminOrdersPage>
                         decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.orange.withOpacity(0.2),
-                                  Colors.red.withOpacity(0.2),
-                                  Colors.yellow.withOpacity(0.2),
+                                  Colors.orange.withOpacity(0.15),
+                                  Colors.red.withOpacity(0.15),
+                                  Colors.yellow.withOpacity(0.15),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
