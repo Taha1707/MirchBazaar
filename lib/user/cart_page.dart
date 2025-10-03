@@ -28,10 +28,8 @@ class _CartPageState extends State<CartPage> {
       batch.delete(ref);
     }
 
-    // ek hi baar commit hoga
     await batch.commit();
 
-    // ek hi snackbar show hoga
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('🗑️ "$title" removed from cart'),
@@ -39,7 +37,6 @@ class _CartPageState extends State<CartPage> {
       ),
     );
   }
-
 
   Future<void> _updateQuantity(
       String docId,
@@ -125,7 +122,7 @@ class _CartPageState extends State<CartPage> {
 
           final items = snapshot.data!.docs;
 
-          // ✅ Grouping by product + weight
+          // ✅ Grouping by product + weight (preserving blend info)
           Map<String, Map<String, dynamic>> groupedItems = {};
 
           for (var doc in items) {
@@ -134,6 +131,7 @@ class _CartPageState extends State<CartPage> {
             final weight = data['selectedWeight'];
             final key = "$productId-$weight"; // ✅ unique key
             final quantity = (data['quantity'] as num).toInt();
+            final isBlend = data['isBlend'] ?? false;
 
             if (!groupedItems.containsKey(key)) {
               groupedItems[key] = {
@@ -144,6 +142,9 @@ class _CartPageState extends State<CartPage> {
                 'weight': weight,
                 'quantity': quantity,
                 'totalPrice': (data['totalPrice'] as num).toDouble(),
+                'isBlend': isBlend, // ✅ Preserve blend flag
+                'blendDescription': data['blendDescription'], // ✅ Preserve blend description
+                'blendDetails': data['blendDetails'], // ✅ Preserve blend details
               };
             } else {
               groupedItems[key]!['quantity'] =
@@ -169,7 +170,9 @@ class _CartPageState extends State<CartPage> {
                   itemBuilder: (context, index) {
                     final item = groupedItems.values.elementAt(index);
                     final docIds = item['docIds'];
-                    final docId = docIds[0]; // first docId for quantity ops
+                    final docId = docIds[0];
+                    final isBlend = item['isBlend'] ?? false;
+                    final blendDescription = item['blendDescription'];
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),
@@ -213,48 +216,95 @@ class _CartPageState extends State<CartPage> {
                                   children: [
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(12),
-                                      child: Image.memory(
+                                      child: item['image'] != null && item['image'].toString().isNotEmpty
+                                          ? Image.memory(
                                         base64Decode(item['image']),
                                         width: 80,
                                         height: 80,
                                         fit: BoxFit.cover,
+                                      )
+                                          : Container(
+                                        width: 80,
+                                        height: 80,
+                                        color: Colors.grey[800],
+                                        child: const Icon(Icons.restaurant, color: Colors.white54, size: 40),
                                       ),
                                     ),
                                     const SizedBox(width: 14),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           const SizedBox(height: 4),
                                           Row(
-                                            mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Text(
-                                                item['title'],
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(
+                                                      children: [
+                                                        Flexible(
+                                                          child: Text(
+                                                            item['title'],
+                                                            style: const TextStyle(
+                                                              color: Colors.white,
+                                                              fontWeight: FontWeight.bold,
+                                                              fontSize: 16,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        // ✅ Blend Badge
+                                                        if (isBlend) ...[
+                                                          const SizedBox(width: 6),
+                                                          Container(
+                                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                            decoration: BoxDecoration(
+                                                              gradient: const LinearGradient(
+                                                                colors: [Colors.purple, Colors.deepPurple],
+                                                              ),
+                                                              borderRadius: BorderRadius.circular(6),
+                                                            ),
+                                                            child: const Text(
+                                                              "BLEND",
+                                                              style: TextStyle(
+                                                                fontSize: 9,
+                                                                fontWeight: FontWeight.bold,
+                                                                color: Colors.white,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ],
+                                                    ),
+                                                    // ✅ Show blend description in cart
+                                                    if (isBlend && blendDescription != null) ...[
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        blendDescription,
+                                                        style: TextStyle(
+                                                          color: Colors.orange.shade300,
+                                                          fontSize: 10,
+                                                          fontStyle: FontStyle.italic,
+                                                        ),
+                                                        maxLines: 2,
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                    ],
+                                                  ],
                                                 ),
                                               ),
                                               Container(
-                                                padding:
-                                                const EdgeInsets.symmetric(
+                                                padding: const EdgeInsets.symmetric(
                                                   horizontal: 8,
                                                   vertical: 4,
                                                 ),
                                                 decoration: BoxDecoration(
-                                                  gradient:
-                                                  const LinearGradient(
-                                                    colors: [
-                                                      Colors.orange,
-                                                      Colors.red
-                                                    ],
+                                                  gradient: const LinearGradient(
+                                                    colors: [Colors.orange, Colors.red],
                                                   ),
-                                                  borderRadius:
-                                                  BorderRadius.circular(6),
+                                                  borderRadius: BorderRadius.circular(6),
                                                 ),
                                                 child: Text(
                                                   "Rs. ${item['unitPrice']}",
@@ -277,9 +327,7 @@ class _CartPageState extends State<CartPage> {
                                           ),
                                           const SizedBox(height: 10),
                                           Row(
-                                            mainAxisAlignment:
-                                            MainAxisAlignment
-                                                .spaceBetween,
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 5),
@@ -290,7 +338,6 @@ class _CartPageState extends State<CartPage> {
                                                 child: Row(
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
-                                                    // Minus button
                                                     InkWell(
                                                       borderRadius: BorderRadius.circular(8),
                                                       onTap: () {
@@ -303,13 +350,11 @@ class _CartPageState extends State<CartPage> {
                                                           _updateQuantity(docId, quantity, item['unitPrice']);
                                                         }
                                                       },
-                                                      child: Padding(
+                                                      child: const Padding(
                                                         padding: EdgeInsets.all(4),
                                                         child: Icon(Icons.remove, color: Colors.white, size: 14),
                                                       ),
                                                     ),
-
-                                                    // Quantity text
                                                     Padding(
                                                       padding: const EdgeInsets.symmetric(horizontal: 4),
                                                       child: Text(
@@ -321,8 +366,6 @@ class _CartPageState extends State<CartPage> {
                                                         ),
                                                       ),
                                                     ),
-
-                                                    // Plus button
                                                     InkWell(
                                                       borderRadius: BorderRadius.circular(8),
                                                       onTap: () {
@@ -333,7 +376,7 @@ class _CartPageState extends State<CartPage> {
                                                         });
                                                         _updateQuantity(docId, quantity, item['unitPrice']);
                                                       },
-                                                      child: Padding(
+                                                      child: const Padding(
                                                         padding: EdgeInsets.all(4),
                                                         child: Icon(Icons.add, color: Colors.white, size: 14),
                                                       ),
@@ -341,53 +384,30 @@ class _CartPageState extends State<CartPage> {
                                                   ],
                                                 ),
                                               ),
-
-
                                               Align(
-                                                alignment:
-                                                Alignment.bottomRight,
+                                                alignment: Alignment.bottomRight,
                                                 child: Container(
                                                   height: 30,
                                                   width: 30,
                                                   decoration: BoxDecoration(
-                                                    gradient:
-                                                    const LinearGradient(
-                                                      colors: [
-                                                        Colors.redAccent,
-                                                        Colors.orange
-                                                      ],
+                                                    gradient: const LinearGradient(
+                                                      colors: [Colors.redAccent, Colors.orange],
                                                       begin: Alignment.topLeft,
-                                                      end:
-                                                      Alignment.bottomRight,
+                                                      end: Alignment.bottomRight,
                                                     ),
-                                                    borderRadius:
-                                                    BorderRadius.circular(
-                                                        8),
+                                                    borderRadius: BorderRadius.circular(8),
                                                   ),
-                                                  padding:
-                                                  const EdgeInsets.all(0.2),
+                                                  padding: const EdgeInsets.all(0.2),
                                                   child: ClipRRect(
-                                                    borderRadius:
-                                                    BorderRadius.circular(
-                                                        6),
+                                                    borderRadius: BorderRadius.circular(6),
                                                     child: BackdropFilter(
-                                                      filter:
-                                                      ImageFilter.blur(
-                                                          sigmaX: 6,
-                                                          sigmaY: 6),
+                                                      filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
                                                       child: Container(
-                                                        decoration:
-                                                        BoxDecoration(
-                                                          color: Colors.black
-                                                              .withOpacity(
-                                                              0.3),
-                                                          borderRadius:
-                                                          BorderRadius
-                                                              .circular(6),
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.black.withOpacity(0.3),
+                                                          borderRadius: BorderRadius.circular(6),
                                                           border: Border.all(
-                                                            color: Colors.white
-                                                                .withOpacity(
-                                                                0.1),
+                                                            color: Colors.white.withOpacity(0.1),
                                                             width: 0.6,
                                                           ),
                                                         ),
@@ -401,12 +421,9 @@ class _CartPageState extends State<CartPage> {
                                                             await _removeItems(item['docIds'], item['title']);
                                                           },
                                                           splashRadius: 16,
-                                                          tooltip:
-                                                          "Remove Item",
-                                                          padding:
-                                                          EdgeInsets.zero,
-                                                          constraints:
-                                                          const BoxConstraints(
+                                                          tooltip: "Remove Item",
+                                                          padding: EdgeInsets.zero,
+                                                          constraints: const BoxConstraints(
                                                             minWidth: 26,
                                                             minHeight: 26,
                                                           ),
@@ -455,8 +472,7 @@ class _CartPageState extends State<CartPage> {
                       children: [
                         const Text(
                           "Total",
-                          style: TextStyle(
-                              color: Colors.white70, fontSize: 14),
+                          style: TextStyle(color: Colors.white70, fontSize: 14),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -470,27 +486,26 @@ class _CartPageState extends State<CartPage> {
                         ),
                       ],
                     ),
-
                     ElevatedButton(
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => CheckoutPage()),
+                          MaterialPageRoute(builder: (context) => const CheckoutPage()),
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.zero, // padding will be inside Ink
+                        padding: EdgeInsets.zero,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                         elevation: 4,
                         shadowColor: Colors.black38,
-                        backgroundColor: Colors.transparent, // important for gradient
+                        backgroundColor: Colors.transparent,
                       ),
                       child: Ink(
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [Colors.yellow, Colors.redAccent, Colors.orange], // orange → pink gradient
+                            colors: [Colors.yellow, Colors.redAccent, Colors.orange],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -511,7 +526,6 @@ class _CartPageState extends State<CartPage> {
                         ),
                       ),
                     ),
-
                   ],
                 ),
               ),
