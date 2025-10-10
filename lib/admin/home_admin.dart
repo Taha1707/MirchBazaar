@@ -93,27 +93,30 @@ class _AdminHomePageState extends State<AdminHomePage>
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  _glassBox(
-                    child: Column(
-                      children: const [
-                        Text(
-                          "Admin Dashboard 🛠",
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                  SizedBox(
+                    width: double.infinity,
+                    child: _glassBox(
+                      child: Column(
+                        children: const [
+                          Text(
+                            "Welcome! Admin",
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 5),
-                        Text(
-                          "Manage your store with ease",
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.white70,
+                          SizedBox(height: 5),
+                          Text(
+                            "Manage your store with ease",
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.white70,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -172,7 +175,7 @@ class _AdminHomePageState extends State<AdminHomePage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          "📢 Admin Announcements",
+                          "📢  Admin Announcements",
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -181,26 +184,34 @@ class _AdminHomePageState extends State<AdminHomePage>
                         ),
                         const SizedBox(height: 10),
                         Container(
-                          height: 120,
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
                             gradient: const LinearGradient(
-                              colors: [Colors.orange, Colors.red, Colors.yellow],
+                              colors: [Color(0xFFE67E22), Color(0xFFD35400), Color(0xFFF39C12)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.orange.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: const Center(
                             child: Text(
                               "No new updates at the moment",
                               style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
                                 color: Colors.white,
                               ),
                             ),
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -226,61 +237,6 @@ class _AdminHomePageState extends State<AdminHomePage>
           ),
         ],
       ),
-    );
-  }
-
-
-  Widget _buildMenu() {
-    return Container(
-      width: 250,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.9),
-        borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(20),
-          bottomRight: Radius.circular(20),
-        ),
-      ),
-      child: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              child: Image.asset(
-                'assets/images/sasta_logo.png',
-              ),
-            ),
-            _menuItem(Icons.dashboard, "Dashboard", () {}),
-
-            _menuItem(Icons.inventory, "Manage Products", () {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ViewProductPage()));
-            }),
-
-            _menuItem(Icons.receipt_long, "Orders", () {}),
-
-            _menuItem(Icons.people, "Customers", () {}),
-
-            _menuItem(Icons.analytics, "Reports", () {}),
-
-            _menuItem(Icons.settings, "Settings", () {}),
-
-            _menuItem(Icons.logout, "Logout", () {
-              LogoutHelper.confirmLogout(context);
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _menuItem(IconData icon, String title, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.orange),
-      title: Text(
-        title,
-        style: const TextStyle(color: Colors.white, fontSize: 16),
-      ),
-      onTap: onTap,
     );
   }
 

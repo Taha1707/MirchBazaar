@@ -197,8 +197,8 @@ class _SignUpPageState extends State<SignUpPage> {
                                         ).createShader(bounds),
                                     child: Icon(
                                       _isObscure
-                                          ? Icons.visibility_outlined
-                                          : Icons.visibility_off_outlined,
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
                                       color: Colors.white,
                                     ),
                                   ),
